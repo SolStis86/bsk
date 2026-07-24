@@ -9,7 +9,7 @@ This project was generated with `@vendure/create`.
 - Start both apps: `npm run dev`
 - Start only the server: `npm run dev:server`
 - Start only the storefront: `npm run dev:storefront`
-- Backend custom code belongs in `apps/server/src/plugins`
+- Backend custom code belongs in `apps/server/src/plugins` — see `apps/server/AGENTS.md` for Vendure plugin patterns
 - Backend runtime configuration is in `apps/server/src/vendure-config.ts`
 - Backend static assets and email templates live in `apps/server/static`
 

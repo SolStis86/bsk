@@ -1,0 +1,46 @@
+---
+description: Vendure plugin, API, service, and entity patterns for the server
+globs: apps/server/**
+alwaysApply: false
+---
+
+# Vendure Server Patterns
+
+Full guide: `apps/server/AGENTS.md`. Vendure docs (MDX): [developer-guide on GitHub](https://github.com/vendurehq/vendure/tree/master/docs/docs/guides/developer-guide). Scaffold with `npx vendure add -p <name>`.
+
+## Plugin checklist
+
+1. `@VendurePlugin({ imports: [PluginCommonModule], … })`
+2. `entities`, `providers`, `shopApiExtensions` / `adminApiExtensions` as needed
+3. Register in `vendure-config.ts`
+4. Generate migration: `npx vendure migrate <plugin-name>`
+
+## API layer (resolvers)
+
+- Thin resolvers → delegate to services.
+- Always `@Ctx() ctx: RequestContext` first arg; pass `ctx` to all service/connection calls.
+- `@Allow(Permission.…)` on queries/mutations; `@Transaction()` on mutations.
+- GraphQL SDL in `api/api-extensions.ts`; resolvers in `api/*.resolver.ts`.
+
+## Service layer
+
+- `@Injectable()` services with business logic.
+- Inject `TransactionalConnection` and core services from `@vendure/core`.
+- DB access: `this.connection.getRepository(ctx, Entity).findOne({ … })` — always pass `ctx`.
+- Eager-load relations explicitly; use `EntityHydrator` when relations aren't guaranteed.
+
+## Entities
+
+- Extend `VendureEntity`; register in plugin `entities` array.
+- `@EntityId()` for FK id columns; `@Money()` for prices.
+- Custom fields: `configuration` callback + `types.ts` module augmentation + migration.
+
+## Worker / jobs
+
+- Lifecycle hooks run in server **and** worker — guard with `ProcessContext.isWorker`.
+- Create job queues in `onModuleInit` / `onApplicationBootstrap`; reuse queue when enqueueing.
+- Never pass raw `RequestContext` as job data — use `ctx.serialize()` or minimal fields to recreate context in the worker.
+
+## Config / env
+
+- Plugins do not read `process.env`; pass values via `Plugin.init()` from `vendure-config.ts`.

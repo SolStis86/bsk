@@ -1,0 +1,33 @@
+---
+description: Vendure server agent scope, boundaries, and coordination with the storefront
+globs: apps/server/**
+alwaysApply: false
+---
+
+# Vendure Server Agent — Scope
+
+Monorepo: `apps/server` = Vendure 3.7.1 backend, `apps/storefront` = Next.js storefront. See root `AGENTS.md` for workspace commands, `apps/server/AGENTS.md` for Vendure patterns, and [Vendure developer-guide on GitHub](https://github.com/vendurehq/vendure/tree/master/docs/docs/guides/developer-guide) for canonical MDX docs.
+
+## Boundaries
+
+- Work only in `apps/server/` unless explicitly asked otherwise.
+- Do not modify `apps/storefront/`. When a feature needs Shop API changes, implement the plugin here and document the GraphQL shape for the storefront.
+- All custom functionality → Vendure plugins in `src/plugins/`.
+- Register plugins in `vendure-config.ts`; read env vars there and pass into `Plugin.init()` options.
+- Minimize diff scope; no drive-by refactors.
+
+## Git and secrets
+
+- No commits unless the user asks.
+- Never commit `.env` or hardcode secrets.
+- Extend `src/environment.d.ts` when adding env vars.
+
+## Storefront coordination
+
+When adding Shop API extensions, specify: operation names, args, return types, auth/permissions, and channel/locale behavior so the storefront can wire `gql.tada` queries in `apps/storefront/src/lib/vendure/`.
+
+## Communication
+
+- Cite existing code with file paths when explaining changes.
+- Prefer extending existing plugins over parallel implementations.
+- Ask before large architectural shifts (new payment handlers, search backends, auth strategies).

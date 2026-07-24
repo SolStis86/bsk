@@ -1,0 +1,30 @@
+---
+description: Quality checks and dev commands for Vendure server changes
+globs: apps/server/**
+alwaysApply: false
+---
+
+# Vendure Server Quality Checks
+
+After substantive changes:
+
+```bash
+npm run build:server
+```
+
+## Schema changes
+
+- `synchronize: false` — never rely on auto-sync in this project.
+- After entities or custom fields: `npx vendure migrate` → generate, then apply.
+- Migrations live in `src/migrations/` and run on start via `runMigrations()` in `index.ts`.
+
+## Dev commands
+
+- Server only: `npm run dev:server`
+- Worker (if testing jobs): `npm run dev:worker -w server`
+- Both apps: `npm run dev`
+- Shop API: http://localhost:3000/shop-api
+- Admin API: http://localhost:3000/admin-api
+- GraphiQL (dev): http://localhost:3000/graphiql/shop-api
+
+Fix build errors introduced by the change; do not leave broken builds.
