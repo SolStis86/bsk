@@ -1,0 +1,28 @@
+---
+description: Quality checks and dev commands for storefront changes
+globs: apps/storefront/**
+alwaysApply: false
+---
+
+# Storefront Quality Checks
+
+After substantive changes, run:
+
+```bash
+npm run build:storefront
+```
+
+Or at minimum:
+
+```bash
+npm run check-types -w storefront
+npm run lint -w storefront
+```
+
+Fix linter and type errors introduced by the change; do not leave broken builds.
+
+## Dev commands
+
+- Storefront only: `npm run dev:storefront` (http://localhost:3001)
+- Both apps: `npm run dev`
+- Vendure Shop API: http://localhost:3000/shop-api

@@ -1,0 +1,24 @@
+---
+description: i18n, UI components, and page structure conventions for the storefront
+globs: apps/storefront/**
+alwaysApply: false
+---
+
+# Storefront UI and i18n
+
+## Pages and structure
+
+- Pages live under `src/app/[locale]/` with co-located `actions.ts`, `loading.tsx`, and feature components.
+- Commerce UI → `src/components/commerce/`; layout → `src/components/layout/`.
+
+## Internationalization (mandatory)
+
+- All user-facing strings use `next-intl` — add keys to both `messages/en.json` and `messages/de.json`.
+- Use `@/i18n/navigation` for locale-aware links, not raw `next/link`.
+- Respect `routing.locales` and `getRouteLocale()` / `setRequestLocale()` conventions.
+
+## UI components
+
+- Reuse shadcn/ui from `src/components/ui/` before adding primitives.
+- Match Tailwind + `cn()` / CVA patterns; support dark mode via `ThemeProvider`.
+- Add `loading.tsx` skeletons where the rest of the app does.

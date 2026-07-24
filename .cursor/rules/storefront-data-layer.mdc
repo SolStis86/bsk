@@ -1,0 +1,28 @@
+---
+description: Vendure API, GraphQL, server actions, and caching patterns for the storefront
+globs: apps/storefront/**
+alwaysApply: false
+---
+
+# Storefront Data Layer
+
+## Vendure API
+
+- Fetch via `query()` / `mutate()` from `@/lib/vendure/api` — not ad-hoc `fetch` to the Shop API.
+- Define GraphQL in `src/lib/vendure/queries.ts`, `mutations.ts`, or `fragments.ts` with `gql.tada`.
+- Pass `useAuthToken`, `currencyCode`, and `languageCode` the same way existing code does.
+
+## Server actions
+
+- Use `'use server'` in route-level `actions.ts` files for mutations and forms.
+- Return structured results for error display; do not leak raw GraphQL errors to users.
+- Invalidate cache with `updateTag()` and cached query tags (e.g. `'cart'`) — match `lib/vendure/cached.ts`.
+
+## Server vs client
+
+- Default to Server Components; add `'use client'` only for interactivity, hooks, or browser APIs.
+- Keep Vendure API calls and secrets server-side — prefer `VENDURE_SHOP_API_URL` over public env vars unless client access is required.
+
+## Forms
+
+- Use react-hook-form + zod + `@hookform/resolvers`, consistent with existing forms.

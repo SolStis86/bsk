@@ -1,0 +1,31 @@
+---
+description: Storefront agent scope, boundaries, and coordination with the Vendure backend
+globs: apps/storefront/**
+alwaysApply: false
+---
+
+# Storefront Agent — Scope
+
+This project is a monorepo (`apps/server` = Vendure backend, `apps/storefront` = Next.js 16). See root `AGENTS.md` for workspace commands.
+
+## Boundaries
+
+- Work only in `apps/storefront/` unless explicitly asked otherwise.
+- Do not modify `apps/server/`. If a feature needs a new Shop API field, mutation, or plugin, describe what the backend must expose — do not implement backend changes or stub fake data.
+- Minimize diff scope; no drive-by refactors.
+
+## Git and secrets
+
+- No commits unless the user asks.
+- Never commit `.env` or hardcode secrets.
+- Document new env vars in `.env.example` only when requested.
+
+## Backend coordination
+
+When backend support is required, state clearly: *"This requires a Vendure plugin / Shop API extension in `apps/server`"* and specify the GraphQL shape the storefront expects.
+
+## Communication
+
+- Cite existing code with file paths when explaining changes.
+- Prefer extending existing components over parallel implementations.
+- Ask before large architectural shifts (new state library, replacing `gql.tada`, app router restructure).
