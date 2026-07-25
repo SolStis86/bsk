@@ -11,6 +11,7 @@ import { ProductFeedImportService } from '../services/product-feed-import.servic
 import {
     ProductFeedImportProgress,
     ProductFeedImportStartResult,
+    ProductFeedImportSummary,
 } from '../types/import.types';
 
 @Resolver()
@@ -36,6 +37,12 @@ export class ProductFeedImportAdminResolver {
         return this.progressService.get(ctx, args.jobId);
     }
 
+    @Query()
+    @Allow(Permission.SuperAdmin)
+    async lastProductFeedImport(@Ctx() ctx: RequestContext): Promise<ProductFeedImportSummary | null> {
+        return this.progressService.getLastCompletedImport(ctx);
+    }
+
     @Mutation()
     @Transaction()
     @Allow(Permission.UpdateSettings, Permission.SuperAdmin)
@@ -54,6 +61,7 @@ export class ProductFeedImportAdminResolver {
     ): Promise<ProductFeedImportStartResult> {
         return this.productFeedImportService.startImportJob(ctx, {
             importLimit: args.importLimit,
+            source: 'manual',
         });
     }
 }

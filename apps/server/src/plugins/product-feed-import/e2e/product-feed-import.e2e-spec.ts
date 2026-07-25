@@ -11,6 +11,7 @@ import { dummyPaymentHandler, mergeConfig } from '@vendure/core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { ProductFeedImportPlugin } from '../product-feed-import.plugin';
+import { defaultProductFeedImportPluginOptions } from '../test/plugin-options.fixture';
 import { e2eInitialData } from './fixtures/e2e-initial-data';
 
 const sqliteDataDir = path.join(__dirname, '__data-product-feed-import');
@@ -25,16 +26,7 @@ describe('ProductFeedImportPlugin e2e', () => {
             paymentOptions: {
                 paymentMethodHandlers: [dummyPaymentHandler],
             },
-            plugins: [
-                ProductFeedImportPlugin.init({
-                    feedUrl: 'https://www.1on1wholesale.co.uk/API/product/export/?type=1',
-                    imageZipUrl:
-                        'https://www.1on1wholesale.co.uk/API/product/export/images/images.zip',
-                    importCron: '0 2 * * *',
-                    disableMissingFromFeed: true,
-                    devImportLimit: 0,
-                }),
-            ],
+            plugins: [ProductFeedImportPlugin.init(defaultProductFeedImportPluginOptions)],
         }),
     );
 

@@ -17,6 +17,7 @@ function createMockService(initialRecords: ProductFeedImportProgressRecord[] = [
             records.set(record.jobId, record);
             return record;
         }),
+        count: vi.fn(async () => 0),
     };
 
     const connection = {

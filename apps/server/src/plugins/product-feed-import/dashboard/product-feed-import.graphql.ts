@@ -18,13 +18,40 @@ export const productFeedImportProgressDocument = graphql(`
             processedProducts
             totalProducts
             currentProductCode
+            assetsPending
             error
             result {
                 productsCreated
                 productsUpdated
                 variantsCreated
                 variantsUpdated
+                variantsDisabled
+                productsDisabled
                 assetsImported
+                assetsEnqueued
+                warnings
+                errors
+            }
+        }
+    }
+`);
+
+export const lastProductFeedImportDocument = graphql(`
+    query LastProductFeedImport {
+        lastProductFeedImport {
+            jobId
+            completedAt
+            source
+            assetsPending
+            result {
+                productsCreated
+                productsUpdated
+                variantsCreated
+                variantsUpdated
+                variantsDisabled
+                productsDisabled
+                assetsImported
+                assetsEnqueued
                 warnings
                 errors
             }

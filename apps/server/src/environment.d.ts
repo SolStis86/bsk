@@ -18,6 +18,12 @@ declare global {
             DB_SCHEMA: string;
             PRODUCT_FEED_URL?: string;
             PRODUCT_FEED_CRON?: string;
+            PRODUCT_FEED_SCHEDULE_ENABLED?: string;
+            PRODUCT_FEED_ASSET_QUEUE_ENABLED?: string;
+            PRODUCT_FEED_STALE_HOURS?: string;
+            STOREFRONT_URL?: string;
+            STOREFRONT_DEFAULT_LOCALE?: string;
+            REVALIDATION_SECRET?: string;
         }
     }
 }

@@ -16,7 +16,7 @@ import {Button} from "@/components/ui/button";
 import {Price} from '@/components/commerce/price';
 import {OrderStatusBadge} from '@/components/commerce/order-status-badge';
 import {formatDate} from '@/lib/format';
-import { Link, redirect } from '@/i18n/navigation';
+import { Link } from '@/i18n/navigation';
 import {getRouteLocale} from '@/i18n/server';
 import {getTranslations} from 'next-intl/server';
 
@@ -53,13 +53,10 @@ export default async function OrdersPage(props: PageProps<'/[locale]/account/ord
         {useAuthToken: true}
     );
 
-    if (!data.activeCustomer) {
-        return redirect({href: '/sign-in', locale});
-    }
     const t = await getTranslations({locale, namespace: 'Account'});
 
-    const orders = data.activeCustomer.orders.items;
-    const totalItems = data.activeCustomer.orders.totalItems;
+    const orders = data.activeCustomer!.orders.items;
+    const totalItems = data.activeCustomer!.orders.totalItems;
     const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
 
     return (

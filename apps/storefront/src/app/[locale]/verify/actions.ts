@@ -1,36 +1,22 @@
 'use server';
 
-import {mutate} from '@/lib/vendure/api';
-import {VerifyCustomerAccountMutation} from '@/lib/vendure/mutations';
 import {setAuthToken} from '@/lib/auth';
-import {getTranslations} from 'next-intl/server';
+import {verifyCustomerAccount} from './verify-account.server';
 
+/**
+ * Server action for form-based verification (supports optional password).
+ * Cookie writes are allowed here because this runs as a submitted action.
+ */
 export async function verifyAccountAction(token: string, password?: string) {
-    const t = await getTranslations('Errors');
+    const result = await verifyCustomerAccount(token, password);
 
-    if (!token) {
-        return {error: t('verificationTokenRequired')};
+    if (!('success' in result)) {
+        return result;
     }
 
-    try {
-        const result = await mutate(VerifyCustomerAccountMutation, {
-            token,
-            password: password || undefined,
-        });
-
-        const verifyResult = result.data.verifyCustomerAccount;
-
-        if (verifyResult.__typename !== 'CurrentUser') {
-            return {error: verifyResult.message};
-        }
-
-        // Store the token in a cookie if returned
-        if (result.token) {
-            await setAuthToken(result.token);
-        }
-
-        return {success: true};
-    } catch {
-        return {error: t('unexpectedError')};
+    if (result.authToken) {
+        await setAuthToken(result.authToken);
     }
+
+    return {success: true as const};
 }

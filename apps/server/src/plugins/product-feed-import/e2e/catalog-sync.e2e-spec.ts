@@ -15,6 +15,7 @@ import { productFeedCustomFields } from '../../../custom-fields';
 import '../../../custom-fields.types';
 import { ProductFeedImportPlugin } from '../product-feed-import.plugin';
 import { ProductFeedImportService } from '../services/product-feed-import.service';
+import { defaultProductFeedImportPluginOptions } from '../test/plugin-options.fixture';
 import { e2eInitialData } from './fixtures/e2e-initial-data';
 
 const sqliteDataDir = path.join(__dirname, '__data-catalog-sync');
@@ -40,15 +41,7 @@ describe('ProductFeedImport catalog sync e2e', () => {
                 paymentMethodHandlers: [dummyPaymentHandler],
             },
             customFields: productFeedCustomFields,
-            plugins: [
-                ProductFeedImportPlugin.init({
-                    feedUrl: 'https://example.com/feed.csv',
-                    imageZipUrl: 'https://example.com/images.zip',
-                    importCron: '0 2 * * *',
-                    disableMissingFromFeed: true,
-                    devImportLimit: 0,
-                }),
-            ],
+            plugins: [ProductFeedImportPlugin.init(defaultProductFeedImportPluginOptions)],
         }),
     );
 
@@ -71,7 +64,10 @@ describe('ProductFeedImport catalog sync e2e', () => {
         const requestContextService = server.app.get(RequestContextService);
         const ctx = await requestContextService.create({ apiType: 'admin' });
 
-        const result = await importService.importFromBuffer(ctx, singleVariant, { skipAssets: true });
+        const result = await importService.importFromBuffer(ctx, singleVariant, {
+            skipAssets: true,
+            deferAssets: false,
+        });
 
         expect(result.errors).toEqual([]);
         expect(result.productsCreated).toBe(1);
@@ -143,5 +139,45 @@ describe('ProductFeedImport catalog sync e2e', () => {
 
         const fieldNames = result.__type.fields.map((f: { name: string }) => f.name);
         expect(fieldNames).toContain('importProductFeed');
+    });
+
+    it('disables variants missing from a subsequent full import', async () => {
+        const combined = combineCsvFixtures('single-variant.csv', 'multi-variant-flavour.csv');
+
+        const importService = server.app.get(ProductFeedImportService);
+        const requestContextService = server.app.get(RequestContextService);
+        const ctx = await requestContextService.create({ apiType: 'admin' });
+
+        await importService.importFromBuffer(ctx, combined, {
+            skipAssets: true,
+            deferAssets: false,
+        });
+
+        const subsetOnly = fs.readFileSync(path.join(fixturesDir, 'single-variant.csv'));
+        await importService.importFromBuffer(ctx, subsetOnly, {
+            skipAssets: true,
+            deferAssets: false,
+        });
+
+        const products = await adminClient.query(gql`
+            query DisabledVariants {
+                products(options: { take: 20 }) {
+                    items {
+                        enabled
+                        variants {
+                            sku
+                            enabled
+                        }
+                    }
+                }
+            }
+        `);
+
+        const allVariants = products.products.items.flatMap(
+            (product: { variants: Array<{ sku: string; enabled: boolean }> }) => product.variants,
+        );
+        const disabledSkus = allVariants.filter(v => !v.enabled).map(v => v.sku);
+        expect(disabledSkus.length).toBeGreaterThan(0);
+        expect(allVariants.some((v: { sku: string }) => v.sku === 'N8440' && v.enabled)).toBe(true);
     });
 });

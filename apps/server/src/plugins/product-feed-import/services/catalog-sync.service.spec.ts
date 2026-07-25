@@ -104,4 +104,76 @@ describe('CatalogSyncService', () => {
             }),
         );
     });
+
+    it('disables feed-managed variants missing from the current import run', async () => {
+        const runStartedAt = new Date('2026-01-02T00:00:00Z');
+        const staleVariant = {
+            id: 'var-stale',
+            sku: 'STALE-SKU',
+            productId: 'prod-1',
+            enabled: true,
+            customFields: { sourceUniqueId: 'STALE-SKU', lastSeenInFeedAt: new Date('2026-01-01T00:00:00Z') },
+            product: { id: 'prod-1' },
+        };
+        const currentVariant = {
+            id: 'var-current',
+            sku: 'CURRENT-SKU',
+            productId: 'prod-2',
+            enabled: true,
+            customFields: { sourceUniqueId: 'CURRENT-SKU', lastSeenInFeedAt: runStartedAt },
+            product: { id: 'prod-2' },
+        };
+
+        const queryBuilder = {
+            innerJoinAndSelect: vi.fn().mockReturnThis(),
+            where: vi.fn().mockReturnThis(),
+            andWhere: vi.fn().mockReturnThis(),
+            getMany: vi.fn().mockResolvedValue([staleVariant, currentVariant]),
+        };
+
+        const productVariantService = {
+            update: vi.fn(),
+            getVariantsByProductId: vi.fn().mockResolvedValue({
+                items: [{ id: 'var-stale', enabled: false }],
+                totalItems: 1,
+            }),
+        };
+        const productService = {
+            update: vi.fn(),
+        };
+        const connection = {
+            getRepository: vi.fn().mockReturnValue({
+                createQueryBuilder: vi.fn().mockReturnValue(queryBuilder),
+            }),
+        };
+
+        const service = new CatalogSyncService(
+            connection as never,
+            productService as never,
+            productVariantService as never,
+            {} as never,
+            {} as never,
+            {} as never,
+            {} as never,
+            {} as never,
+            {} as never,
+            {} as never,
+        );
+
+        const result = await service.disableMissingFromFeed(
+            {} as never,
+            runStartedAt,
+            new Set(['CURRENT-SKU']),
+        );
+
+        expect(result.variantsDisabled).toBe(1);
+        expect(productVariantService.update).toHaveBeenCalledWith(
+            expect.anything(),
+            [expect.objectContaining({ id: 'var-stale', enabled: false })],
+        );
+        expect(productService.update).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.objectContaining({ id: 'prod-1', enabled: false }),
+        );
+    });
 });

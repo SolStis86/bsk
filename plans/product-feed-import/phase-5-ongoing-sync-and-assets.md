@@ -11,12 +11,12 @@ Production-ready feed integration: scheduled delta updates, background asset imp
 
 ## Deliverables
 
-- [ ] Delta sync by variant SKU (`Unique ID`)
-- [ ] `DefaultSchedulerPlugin` or cron-triggered import job
-- [ ] Asset import job queue (remote URL → Vendure Asset)
-- [ ] Skip unchanged assets (URL / etag strategy)
-- [ ] `ProductFeedImportCompleted` event → optional webhook / revalidate
-- [ ] Monitoring: import logs, error alerts, stale feed detection
+- [x] Delta sync by variant SKU (`Unique ID`)
+- [x] `DefaultSchedulerPlugin` cron-triggered import job
+- [x] Asset import job queue (remote URL → Vendure Asset)
+- [x] Skip unchanged assets (filename match against existing entity assets)
+- [x] `ProductFeedImportCompleted` event → storefront revalidate
+- [x] Monitoring: import history, last run summary, stale feed warning in admin
 
 ## Delta sync architecture
 
@@ -69,8 +69,8 @@ Reference: [worker-job-queue](https://github.com/vendurehq/vendure/tree/master/d
 
 | Step | Detail |
 |------|--------|
-| Dedupe | Store source URL on asset custom field or side table |
-| Download | HTTP GET from 1on1wholesale.co.uk |
+| Dedupe | Skip when product/variant assets already match feed filenames |
+| Download | HTTP GET from 1on1wholesale.co.uk zip (one copy per import run in temp dir) |
 | Failure | Retry with backoff; log; product live without image |
 | Variant image | Prefer URL containing `Subproduct Code` |
 
@@ -84,7 +84,9 @@ Options:
 2. **Manual admin** — keep Phase 3 mutation for on-demand
 3. **File watch** — if feed dropped to `data/active-products.csv` on deploy
 
-Configure feed path via `ProductFeedImportPlugin.init({ feedPath })`.
+Configure feed path via `ProductFeedImportPlugin.init({ feedUrl })`.
+
+Env: `PRODUCT_FEED_CRON`, `PRODUCT_FEED_SCHEDULE_ENABLED` (disabled in dev by default).
 
 ## Storefront cache
 
@@ -96,16 +98,17 @@ After import:
 - Revalidate product slugs (batch or wildcard if supported)
 - Coordinate tag names with `lib/vendure/cached.ts`
 
+Server env: `STOREFRONT_URL`, `REVALIDATION_SECRET` (must match storefront).
+
 ## Observability
 
 | Metric | Purpose |
 |--------|---------|
-| `lastImportAt` | Settings store or custom entity |
-| Row counts | created / updated / skipped / errors |
-| Duration | Per run |
+| `lastProductFeedImport` query | Admin dashboard last-run widget |
+| Row counts | created / updated / disabled / errors |
+| Duration | Per run (`durationMs` on progress record) |
 | Warnings | Bad groups, missing RRP |
-
-Expose `lastProductFeedImport` on Admin API for Dashboard widget (optional).
+| Stale warning | >36h since last successful import |
 
 ## Acceptance criteria
 

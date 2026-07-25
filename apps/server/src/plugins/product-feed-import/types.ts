@@ -8,4 +8,10 @@ export interface PluginInitOptions {
     disableMissingFromFeed: boolean;
     /** When > 0, limits import unless overridden by mutation/CLI. 0 = no limit. */
     devImportLimit: number;
+    storefrontUrl: string;
+    revalidationSecret: string;
+    scheduleEnabled: boolean;
+    assetQueueEnabled: boolean;
+    /** Hours after last import before admin UI shows a stale warning. */
+    staleImportThresholdHours: number;
 }

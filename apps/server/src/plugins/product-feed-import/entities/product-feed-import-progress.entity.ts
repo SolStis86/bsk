@@ -30,6 +30,21 @@ export class ProductFeedImportProgressRecord extends VendureEntity {
     @Column({ type: 'varchar', nullable: true })
     currentProductCode: string | null;
 
+    @Column('int', { default: 0 })
+    assetsPending: number;
+
+    @Column({ type: 'varchar', nullable: true })
+    source: string | null;
+
+    @Column({ type: 'varchar', nullable: true })
+    startedAt: string | null;
+
+    @Column({ type: 'varchar', nullable: true })
+    completedAt: string | null;
+
+    @Column('int', { nullable: true })
+    durationMs: number | null;
+
     @Column('simple-json', { nullable: true })
     result: ProductFeedImportResult | null;
 

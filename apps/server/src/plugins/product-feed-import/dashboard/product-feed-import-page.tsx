@@ -16,6 +16,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
     importJobStatusDocument,
     importProductFeedDocument,
+    lastProductFeedImportDocument,
     productFeedImportProgressDocument,
 } from './product-feed-import.graphql';
 
@@ -24,7 +25,10 @@ type ImportResult = {
     productsUpdated: number;
     variantsCreated: number;
     variantsUpdated: number;
+    variantsDisabled: number;
+    productsDisabled: number;
     assetsImported: number;
+    assetsEnqueued: number;
     warnings: string[];
     errors: string[];
 };
@@ -37,8 +41,17 @@ type ImportProgress = {
     processedProducts: number;
     totalProducts: number;
     currentProductCode?: string | null;
+    assetsPending?: number;
     error?: string | null;
     result?: ImportResult | null;
+};
+
+type LastImportSummary = {
+    jobId: string;
+    completedAt: string;
+    source: string;
+    assetsPending: number;
+    result: ImportResult;
 };
 
 const STAGE_LABELS: Record<string, string> = {
@@ -47,20 +60,41 @@ const STAGE_LABELS: Record<string, string> = {
     PREPARING_IMAGES: 'Preparing images',
     PARSING_FEED: 'Parsing feed',
     SYNCING_PRODUCTS: 'Syncing products',
+    DISABLING_MISSING: 'Disabling missing SKUs',
+    ENQUEUING_ASSETS: 'Queueing asset imports',
     APPLYING_COLLECTIONS: 'Applying collections',
     REINDEXING_SEARCH: 'Reindexing search',
     COMPLETE: 'Complete',
     FAILED: 'Failed',
 };
 
+const STALE_THRESHOLD_HOURS = 36;
+
 function isTerminalStage(stage: string | undefined): boolean {
     return stage === 'COMPLETE' || stage === 'FAILED';
+}
+
+function formatDateTime(value: string): string {
+    return new Date(value).toLocaleString();
+}
+
+function hoursSince(value: string): number {
+    return (Date.now() - new Date(value).getTime()) / (1000 * 60 * 60);
 }
 
 export function ProductFeedImportPage() {
     const [limit, setLimit] = useState('');
     const [jobId, setJobId] = useState<string | null>(null);
     const [result, setResult] = useState<ImportResult | null>(null);
+
+    const { data: lastImportData } = useQuery({
+        queryKey: ['last-product-feed-import'],
+        queryFn: () => api.query(lastProductFeedImportDocument),
+    });
+
+    const lastImport: LastImportSummary | null = lastImportData?.lastProductFeedImport ?? null;
+    const isStale =
+        lastImport != null && hoursSince(lastImport.completedAt) > STALE_THRESHOLD_HOURS;
 
     const { mutate, isPending: isStarting } = useMutation({
         mutationFn: (importLimit?: number) =>
@@ -180,6 +214,59 @@ export function ProductFeedImportPage() {
         <Page pageId="product-feed-import">
             <PageTitle>Product feed import</PageTitle>
             <PageLayout>
+                <PageBlock column="main" blockId="last-import">
+                    <h3 className="mb-3 text-lg font-semibold">Last successful import</h3>
+                    {lastImport ? (
+                        <div className="max-w-xl space-y-3 text-sm">
+                            <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
+                                <dt className="text-muted-foreground">Completed</dt>
+                                <dd>{formatDateTime(lastImport.completedAt)}</dd>
+                                <dt className="text-muted-foreground">Source</dt>
+                                <dd>{lastImport.source}</dd>
+                                <dt className="text-muted-foreground">Products updated</dt>
+                                <dd>
+                                    {lastImport.result.productsCreated} created,{' '}
+                                    {lastImport.result.productsUpdated} updated
+                                </dd>
+                                <dt className="text-muted-foreground">Variants updated</dt>
+                                <dd>
+                                    {lastImport.result.variantsCreated} created,{' '}
+                                    {lastImport.result.variantsUpdated} updated
+                                </dd>
+                                <dt className="text-muted-foreground">Disabled (missing)</dt>
+                                <dd>
+                                    {lastImport.result.variantsDisabled} variants,{' '}
+                                    {lastImport.result.productsDisabled} products
+                                </dd>
+                                <dt className="text-muted-foreground">Assets</dt>
+                                <dd>
+                                    {lastImport.result.assetsImported} imported inline,{' '}
+                                    {lastImport.result.assetsEnqueued} queued
+                                </dd>
+                            </dl>
+                            {lastImport.assetsPending > 0 ? (
+                                <p className="text-muted-foreground">
+                                    {lastImport.assetsPending} asset job(s) still pending in the
+                                    worker queue.
+                                </p>
+                            ) : null}
+                            {isStale ? (
+                                <p className="text-destructive">
+                                    Last import was more than {STALE_THRESHOLD_HOURS} hours ago.
+                                    Check the scheduled task and worker process.
+                                </p>
+                            ) : null}
+                        </div>
+                    ) : (
+                        <p className="text-muted-foreground text-sm">No completed imports yet.</p>
+                    )}
+                    <p className="text-muted-foreground mt-4 text-sm">
+                        Scheduled sync runs nightly at 02:00 (configurable via{' '}
+                        <code>PRODUCT_FEED_CRON</code>). Disabled in dev unless{' '}
+                        <code>PRODUCT_FEED_SCHEDULE_ENABLED=true</code>.
+                    </p>
+                </PageBlock>
+
                 <PageBlock column="main" blockId="import-controls">
                     <p className="text-muted-foreground mb-4">
                         Import products from the configured wholesale CSV feed and image zip. Safe to
@@ -200,8 +287,8 @@ export function ProductFeedImportPage() {
                             disabled={isImportRunning}
                         />
                         <p className="text-muted-foreground text-sm">
-                            Use a small limit (e.g. 10) for smoke tests. Full import may take a
-                            while while images are loaded from the zip.
+                            Use a small limit (e.g. 10) for smoke tests. A limited import skips
+                            disabling SKUs missing from the feed.
                         </p>
                     </div>
 
@@ -254,6 +341,12 @@ export function ProductFeedImportPage() {
                                 </p>
                             ) : null}
 
+                            {(displayProgress.assetsPending ?? 0) > 0 ? (
+                                <p className="text-sm">
+                                    Asset jobs pending: {displayProgress.assetsPending}
+                                </p>
+                            ) : null}
+
                             {displayProgress.stage === 'FAILED' && displayProgress.error ? (
                                 <p className="text-destructive text-sm">{displayProgress.error}</p>
                             ) : null}
@@ -280,8 +373,14 @@ export function ProductFeedImportPage() {
                             <dd>{result.variantsCreated}</dd>
                             <dt className="text-muted-foreground">Variants updated</dt>
                             <dd>{result.variantsUpdated}</dd>
+                            <dt className="text-muted-foreground">Variants disabled</dt>
+                            <dd>{result.variantsDisabled}</dd>
+                            <dt className="text-muted-foreground">Products disabled</dt>
+                            <dd>{result.productsDisabled}</dd>
                             <dt className="text-muted-foreground">Assets imported</dt>
                             <dd>{result.assetsImported}</dd>
+                            <dt className="text-muted-foreground">Assets queued</dt>
+                            <dd>{result.assetsEnqueued}</dd>
                         </dl>
 
                         {result.warnings.length > 0 ? (

@@ -25,17 +25,21 @@ export class ImageZipArchive {
     }
 
     static async fromUrl(url: string): Promise<ImageZipArchive> {
+        const tempPath = path.join(os.tmpdir(), `product-feed-images-${Date.now()}.zip`);
+        await ImageZipArchive.downloadToPath(url, tempPath);
+        const directory = await unzipper.Open.file(tempPath);
+        return new ImageZipArchive(tempPath, true, buildIndex(directory));
+    }
+
+    static async downloadToPath(url: string, zipPath: string): Promise<void> {
         const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`Failed to fetch image zip: HTTP ${response.status}`);
         }
 
-        const tempPath = path.join(os.tmpdir(), `product-feed-images-${Date.now()}.zip`);
+        await fs.mkdir(path.dirname(zipPath), { recursive: true });
         const arrayBuffer = await response.arrayBuffer();
-        await fs.writeFile(tempPath, Buffer.from(arrayBuffer));
-
-        const directory = await unzipper.Open.file(tempPath);
-        return new ImageZipArchive(tempPath, true, buildIndex(directory));
+        await fs.writeFile(zipPath, Buffer.from(arrayBuffer));
     }
 
     get entryCount(): number {

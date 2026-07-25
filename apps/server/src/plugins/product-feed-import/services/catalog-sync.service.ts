@@ -18,7 +18,7 @@ import { ProductVariant } from '@vendure/core/dist/entity/product-variant/produc
 import { IsNull } from 'typeorm';
 
 import { NormalizedProduct, NormalizedVariant } from '../types/feed.types';
-import { CatalogSyncResult } from '../types/import.types';
+import { CatalogSyncResult, DisableMissingResult } from '../types/import.types';
 import { sanitizeProductDescription } from '../utils/html-sanitize';
 import { toMinorUnits } from '../utils/price.utils';
 import { TaxonomySyncService } from './taxonomy-sync.service';
@@ -137,6 +137,65 @@ export class CatalogSyncService {
             variantsUpdated,
             productId: String(productId),
             variantIds,
+        };
+    }
+
+    async disableMissingFromFeed(
+        ctx: RequestContext,
+        runStartedAt: Date,
+        seenSkus: Set<string>,
+    ): Promise<DisableMissingResult> {
+        const variantRepo = this.connection.getRepository(ctx, ProductVariant);
+        const feedVariants = await variantRepo
+            .createQueryBuilder('variant')
+            .innerJoinAndSelect('variant.product', 'product')
+            .where('variant.deletedAt IS NULL')
+            .andWhere('variant.customFieldsSourceuniqueid IS NOT NULL')
+            .andWhere("TRIM(variant.customFieldsSourceuniqueid) != ''")
+            .getMany();
+
+        const variantsToDisable = feedVariants.filter(variant => {
+            if (seenSkus.has(variant.sku)) {
+                return false;
+            }
+
+            const lastSeen = variant.customFields.lastSeenInFeedAt;
+            return !lastSeen || lastSeen < runStartedAt;
+        });
+
+        if (variantsToDisable.length === 0) {
+            return { variantsDisabled: 0, productsDisabled: 0 };
+        }
+
+        await this.productVariantService.update(
+            ctx,
+            variantsToDisable.map(variant => ({
+                id: variant.id,
+                enabled: false,
+            })),
+        );
+
+        const affectedProductIds = [...new Set(variantsToDisable.map(variant => variant.productId))];
+        let productsDisabled = 0;
+
+        for (const productId of affectedProductIds) {
+            const variantsResult = await this.productVariantService.getVariantsByProductId(
+                ctx,
+                productId,
+            );
+            const variants = variantsResult.items;
+            if (variants.length > 0 && variants.every(variant => !variant.enabled)) {
+                await this.productService.update(ctx, {
+                    id: productId,
+                    enabled: false,
+                });
+                productsDisabled++;
+            }
+        }
+
+        return {
+            variantsDisabled: variantsToDisable.length,
+            productsDisabled,
         };
     }
 

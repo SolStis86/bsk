@@ -17,6 +17,8 @@ import { ProductFeedImportPlugin } from './plugins/product-feed-import/product-f
 
 const IS_DEV = process.env.APP_ENV === 'dev';
 const serverPort = +process.env.PORT || 3000;
+const storefrontUrl = process.env.STOREFRONT_URL ?? 'http://localhost:3001';
+const storefrontDefaultLocale = process.env.STOREFRONT_DEFAULT_LOCALE ?? 'en';
 
 export const config: VendureConfig = {
     apiOptions: {
@@ -82,12 +84,10 @@ export const config: VendureConfig = {
             handlers: defaultEmailHandlers,
             templateLoader: new FileBasedTemplateLoader(path.join(__dirname, '../static/email/templates')),
             globalTemplateVars: {
-                // The following variables will change depending on your storefront implementation.
-                // Here we are assuming a storefront running at http://localhost:8080.
-                fromAddress: '"example" <noreply@example.com>',
-                verifyEmailAddressUrl: 'http://localhost:8080/verify',
-                passwordResetUrl: 'http://localhost:8080/password-reset',
-                changeEmailAddressUrl: 'http://localhost:8080/verify-email-address-change'
+                fromAddress: '"Buy Some Knickers" <noreply@example.com>',
+                verifyEmailAddressUrl: `${storefrontUrl}/${storefrontDefaultLocale}/verify`,
+                passwordResetUrl: `${storefrontUrl}/${storefrontDefaultLocale}/reset-password`,
+                changeEmailAddressUrl: `${storefrontUrl}/${storefrontDefaultLocale}/account/verify-email`,
             },
         }),
         DashboardPlugin.init({
@@ -106,6 +106,11 @@ export const config: VendureConfig = {
             importCron: process.env.PRODUCT_FEED_CRON ?? '0 2 * * *',
             disableMissingFromFeed: true,
             devImportLimit: +(process.env.PRODUCT_FEED_DEV_IMPORT_LIMIT ?? 0),
+            storefrontUrl: process.env.STOREFRONT_URL ?? 'http://localhost:3001',
+            revalidationSecret: process.env.REVALIDATION_SECRET ?? '',
+            scheduleEnabled: process.env.PRODUCT_FEED_SCHEDULE_ENABLED !== 'false' && !IS_DEV,
+            assetQueueEnabled: process.env.PRODUCT_FEED_ASSET_QUEUE_ENABLED !== 'false',
+            staleImportThresholdHours: +(process.env.PRODUCT_FEED_STALE_HOURS ?? 36),
         }),
     ],
 };

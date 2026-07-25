@@ -54,6 +54,8 @@ async function run(): Promise<void> {
             fixturePath: options.fixturePath,
             importLimit: options.importLimit,
             imageZipPath: options.imageZipPath,
+            source: 'cli',
+            deferAssets: false,
         });
 
         console.log('\nImport complete:');
@@ -61,7 +63,10 @@ async function run(): Promise<void> {
         console.log(`  Products updated: ${result.productsUpdated}`);
         console.log(`  Variants created: ${result.variantsCreated}`);
         console.log(`  Variants updated: ${result.variantsUpdated}`);
+        console.log(`  Variants disabled: ${result.variantsDisabled}`);
+        console.log(`  Products disabled: ${result.productsDisabled}`);
         console.log(`  Assets imported: ${result.assetsImported}`);
+        console.log(`  Assets enqueued: ${result.assetsEnqueued}`);
 
         if (result.warnings.length) {
             console.log(`\nWarnings (${result.warnings.length}):`);

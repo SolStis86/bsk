@@ -7,6 +7,8 @@ export const adminApiExtensions = gql`
         PREPARING_IMAGES
         PARSING_FEED
         SYNCING_PRODUCTS
+        DISABLING_MISSING
+        ENQUEUING_ASSETS
         APPLYING_COLLECTIONS
         REINDEXING_SEARCH
         COMPLETE
@@ -18,7 +20,10 @@ export const adminApiExtensions = gql`
         productsUpdated: Int!
         variantsCreated: Int!
         variantsUpdated: Int!
+        variantsDisabled: Int!
+        productsDisabled: Int!
         assetsImported: Int!
+        assetsEnqueued: Int!
         warnings: [String!]!
         errors: [String!]!
     }
@@ -35,8 +40,21 @@ export const adminApiExtensions = gql`
         processedProducts: Int!
         totalProducts: Int!
         currentProductCode: String
+        assetsPending: Int!
         result: ProductFeedImportResult
         error: String
+        source: String
+        startedAt: DateTime
+        completedAt: DateTime
+        durationMs: Int
+    }
+
+    type ProductFeedImportSummary {
+        jobId: ID!
+        completedAt: DateTime!
+        source: String!
+        assetsPending: Int!
+        result: ProductFeedImportResult!
     }
 
     type CategoryAvailabilityTag {
@@ -63,6 +81,7 @@ export const adminApiExtensions = gql`
     extend type Query {
         categoryAvailability: [CategoryAvailabilityCollection!]!
         productFeedImportProgress(jobId: ID!): ProductFeedImportProgress
+        lastProductFeedImport: ProductFeedImportSummary
     }
 
     extend type Mutation {
