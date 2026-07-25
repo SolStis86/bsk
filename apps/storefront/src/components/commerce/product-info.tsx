@@ -11,13 +11,31 @@ import {ShoppingCart, CheckCircle2} from 'lucide-react';
 import {addToCart} from '@/app/[locale]/product/[slug]/actions';
 import {toast} from 'sonner';
 import {Price} from '@/components/commerce/price';
+import {ProductSpecs} from '@/components/commerce/product-specs';
 import {useTranslations} from 'next-intl';
+
+interface ProductFacetValue {
+    id: string;
+    name: string;
+    code: string;
+    facet: {
+        id: string;
+        code: string;
+        name: string;
+    };
+}
 
 interface ProductInfoProps {
     product: {
         id: string;
         name: string;
         description: string;
+        customFields?: {
+            materials?: string | null;
+            power?: string | null;
+            sizeImperial?: string | null;
+        } | null;
+        facetValues?: ProductFacetValue[] | null;
         variants: Array<{
             id: string;
             name: string;
@@ -154,10 +172,21 @@ export function ProductInfo({product, searchParams, currencyCode}: ProductInfoPr
 
             <Separator />
 
+            <ProductSpecs
+                customFields={product.customFields}
+                facetValues={product.facetValues}
+            />
+
+            {product.customFields || product.facetValues ? <Separator /> : null}
+
             {/* Product Description */}
-            <div className="prose prose-sm max-w-none text-muted-foreground">
-                <div dangerouslySetInnerHTML={{__html: product.description}}/>
-            </div>
+            {product.description ? (
+                <div className="prose prose-sm max-w-none text-muted-foreground">
+                    <div dangerouslySetInnerHTML={{__html: product.description}}/>
+                </div>
+            ) : null}
+
+            {product.description ? <Separator /> : null}
 
             {/* Option Groups */}
             {product.optionGroups.length > 0 && (

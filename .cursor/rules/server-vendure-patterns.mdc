@@ -33,7 +33,13 @@ Full guide: `apps/server/AGENTS.md`. Vendure docs (MDX): [developer-guide on Git
 
 - Extend `VendureEntity`; register in plugin `entities` array.
 - `@EntityId()` for FK id columns; `@Money()` for prices.
-- Custom fields: `configuration` callback + `types.ts` module augmentation + migration.
+
+## Custom fields
+
+- Define app-specific fields in `vendure-config.ts` → `customFields` (see `src/custom-fields.ts`), not in plugin `configuration`.
+- TypeScript augmentation in `src/custom-fields.types.ts`; import in `vendure-config.ts`.
+- Plugin `configuration` + `push` only for reusable plugins that must extend entities.
+- Always generate a migration after custom field changes.
 
 ## Worker / jobs
 

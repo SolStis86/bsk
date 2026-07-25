@@ -4,7 +4,7 @@ import {getActiveCurrencyCode} from '@/lib/currency-server';
 import {FacetFilters} from "@/components/commerce/facet-filters";
 import {ProductGridSkeleton} from "@/components/shared/product-grid-skeleton";
 import {ProductGrid} from "@/components/commerce/product-grid";
-import {buildSearchInput, getCurrentPage} from "@/lib/search-helpers";
+import {buildSearchInput} from "@/lib/search-helpers";
 import {query} from "@/lib/vendure/api";
 import {SearchProductsQuery} from "@/lib/vendure/queries";
 
@@ -18,10 +18,9 @@ export async function SearchResults({searchParams}: SearchResultsProps) {
     const searchParamsResolved = await searchParams;
     const locale = await getRouteLocale();
     const currencyCode = await getActiveCurrencyCode();
-    const page = getCurrentPage(searchParamsResolved);
 
     const productDataPromise = query(SearchProductsQuery, {
-        input: buildSearchInput({searchParams: searchParamsResolved})
+        input: buildSearchInput({searchParams: searchParamsResolved, page: 1})
     }, {languageCode: locale, currencyCode});
 
 
@@ -37,7 +36,7 @@ export async function SearchResults({searchParams}: SearchResultsProps) {
             {/* Product Grid */}
             <div className="lg:col-span-3">
                 <Suspense fallback={<ProductGridSkeleton/>}>
-                    <ProductGrid productDataPromise={productDataPromise} currentPage={page} take={12}/>
+                    <ProductGrid productDataPromise={productDataPromise} />
                 </Suspense>
             </div>
         </div>

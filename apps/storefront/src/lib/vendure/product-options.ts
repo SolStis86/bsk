@@ -1,7 +1,7 @@
 import type { ResultOf } from 'gql.tada';
-import type { GetProductDetailQuery } from './queries';
+import { ProductDetailFragment } from './fragments';
 
-type ProductDetail = NonNullable<ResultOf<typeof GetProductDetailQuery>['product']>;
+type ProductDetail = ResultOf<typeof ProductDetailFragment>;
 
 /**
  * Vendure 3.6 made ProductOptionGroup/ProductOption shared and channel-aware

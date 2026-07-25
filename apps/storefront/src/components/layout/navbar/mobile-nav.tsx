@@ -14,14 +14,15 @@ import {
     SheetClose,
 } from '@/components/ui/sheet';
 import {useTranslations} from 'next-intl';
-import {MAIN_NAV_LINKS, type NavLinkKey} from '@/lib/nav-links';
+import type {CollectionNavLink} from '@/lib/collection-nav';
 import {cn} from '@/lib/utils';
 
 interface MobileNavProps {
+    navLinks: CollectionNavLink[];
     preferences?: ReactNode;
 }
 
-export function MobileNav({preferences}: MobileNavProps) {
+export function MobileNav({navLinks, preferences}: MobileNavProps) {
     const t = useTranslations('Navigation');
     const [open, setOpen] = useState(false);
     const [searchValue, setSearchValue] = useState('');
@@ -70,12 +71,12 @@ export function MobileNav({preferences}: MobileNavProps) {
                     </form>
 
                     <nav className="flex flex-col gap-0.5">
-                        {MAIN_NAV_LINKS.map(({key, href, highlight}) => (
+                        {navLinks.map(({slug, name, highlight}) => (
                             <SheetClose
-                                key={key}
+                                key={slug}
                                 render={
                                     <Link
-                                        href={href}
+                                        href={`/collection/${slug}`}
                                         className={cn(
                                             'flex items-center px-3 py-2.5 text-sm font-semibold uppercase tracking-[0.12em] rounded-md hover:bg-accent transition-colors',
                                             highlight ? 'text-brand-pink' : 'text-brand-charcoal',
@@ -85,7 +86,7 @@ export function MobileNav({preferences}: MobileNavProps) {
                                 nativeButton={false}
                                 onClick={handleLinkClick}
                             >
-                                {t(`nav.${key as NavLinkKey}`)}
+                                {name}
                             </SheetClose>
                         ))}
                     </nav>

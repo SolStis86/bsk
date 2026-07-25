@@ -2,9 +2,12 @@ import type { Metadata } from 'next';
 import { Link } from '@/i18n/navigation';
 import { query } from '@/lib/vendure/api';
 import { GetProductDetailQuery } from '@/lib/vendure/queries';
+import { ProductDetailFragment } from '@/lib/vendure/fragments';
+import { readFragment } from '@/graphql';
 import { ProductImageCarousel } from '@/components/commerce/product-image-carousel';
 import { ProductInfo } from '@/components/commerce/product-info';
 import { getDisplayOptionGroups } from '@/lib/vendure/product-options';
+import { getCollectionBreadcrumbParent } from '@/lib/collection-slugs';
 import { RelatedProducts } from '@/components/commerce/related-products';
 import {
     Accordion,
@@ -34,6 +37,7 @@ import {getTranslations} from 'next-intl/server';
 import {toOgLocale} from '@/i18n/locale-utils';
 import {getActiveCurrencyCode} from '@/lib/currency-server';
 import {getRouteLocale} from '@/i18n/server';
+import {sanitizeProductDescription} from '@/lib/sanitize-html';
 
 async function getProductData(slug: string, currencyCode: string) {
     'use cache';
@@ -53,15 +57,17 @@ export async function generateMetadata({
     const locale = await getRouteLocale();
     const currencyCode = await getActiveCurrencyCode();
     const result = await getProductData(slug, currencyCode);
-    const product = result.data.product;
+    const productRef = result.data.product;
 
     const t = await getTranslations({locale, namespace: 'Product'});
 
-    if (!product) {
+    if (!productRef) {
         return {
             title: t('notFound'),
         };
     }
+
+    const product = readFragment(ProductDetailFragment, productRef);
 
     const description = truncateDescription(product.description);
     const fallbackDescription = t('shopProductAt', {name: product.name, siteName: SITE_NAME});
@@ -103,29 +109,45 @@ export default async function ProductDetailPage({params, searchParams}: PageProp
     const t = await getTranslations({locale, namespace: 'Product'});
 
     const result = await getProductData(slug, currencyCode);
+    const productRef = result.data.product;
 
-    const product = result.data.product;
-
-    if (!product) {
+    if (!productRef) {
         notFound();
     }
 
+    const product = readFragment(ProductDetailFragment, productRef);
+
     // Get the primary collection (prefer deepest nested / most specific)
     const primaryCollection = product.collections?.find(c => c.parent?.id) ?? product.collections?.[0];
+    const parentCollection = getCollectionBreadcrumbParent(primaryCollection?.parent);
 
     // Hide options that belong to a shared option group but have no variant on
     // this product (Vendure 3.6 shared/global option groups).
-    const productForDisplay = {...product, optionGroups: getDisplayOptionGroups(product)};
+    const productForDisplay = {
+        ...product,
+        description: sanitizeProductDescription(product.description),
+        optionGroups: getDisplayOptionGroups(product),
+    };
 
     return (
         <>
-            <div className="container mx-auto px-4 py-8 mt-16">
+            <div className="container mx-auto px-4 py-8">
                 {/* Breadcrumb Navigation */}
                 <Breadcrumb className="mb-6">
                     <BreadcrumbList>
                         <BreadcrumbItem>
                             <BreadcrumbLink render={<Link href="/" />}>{t('home')}</BreadcrumbLink>
                         </BreadcrumbItem>
+                        {parentCollection && (
+                            <>
+                                <BreadcrumbSeparator />
+                                <BreadcrumbItem>
+                                    <BreadcrumbLink render={<Link href={`/collection/${parentCollection.slug}`} />}>
+                                        {parentCollection.name}
+                                    </BreadcrumbLink>
+                                </BreadcrumbItem>
+                            </>
+                        )}
                         {primaryCollection && (
                             <>
                                 <BreadcrumbSeparator />

@@ -1,3 +1,5 @@
+export const PRODUCTS_PAGE_SIZE = 12;
+
 export interface SearchInputParams {
     term?: string;
     collectionSlug?: string;
@@ -11,11 +13,16 @@ export interface SearchInputParams {
 interface BuildSearchInputOptions {
     searchParams: { [key: string]: string | string[] | undefined };
     collectionSlug?: string;
+    page?: number;
 }
 
-export function buildSearchInput({ searchParams, collectionSlug }: BuildSearchInputOptions): SearchInputParams {
-    const page = Number(searchParams.page) || 1;
-    const take = 12;
+export function buildSearchInput({
+    searchParams,
+    collectionSlug,
+    page: pageOverride,
+}: BuildSearchInputOptions): SearchInputParams {
+    const page = pageOverride ?? (Number(searchParams.page) || 1);
+    const take = PRODUCTS_PAGE_SIZE;
     const skip = (page - 1) * take;
     const sort = (searchParams.sort as string) || 'name-asc';
     const searchTerm = searchParams.q as string;

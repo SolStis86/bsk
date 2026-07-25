@@ -23,6 +23,73 @@ export const ProductCardFragment = graphql(`
     }
 `);
 
+export const ProductDetailFragment = graphql(`
+    fragment ProductDetail on Product {
+        id
+        name
+        description
+        slug
+        customFields {
+            materials
+            power
+            sizeImperial
+        }
+        facetValues {
+            id
+            name
+            code
+            facet {
+                id
+                code
+                name
+            }
+        }
+        assets {
+            id
+            preview
+            source
+        }
+        variants {
+            id
+            name
+            sku
+            priceWithTax
+            stockLevel
+            options {
+                id
+                code
+                name
+                groupId
+                group {
+                    id
+                    code
+                    name
+                }
+            }
+        }
+        optionGroups {
+            id
+            code
+            name
+            options {
+                id
+                code
+                name
+            }
+        }
+        collections {
+            id
+            name
+            slug
+            parent {
+                id
+                name
+                slug
+            }
+        }
+    }
+`);
+
 export const ActiveCustomerFragment = graphql(`
     fragment ActiveCustomer on Customer {
         id

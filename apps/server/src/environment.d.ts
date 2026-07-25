@@ -16,6 +16,8 @@ declare global {
             DB_USERNAME: string;
             DB_PASSWORD: string;
             DB_SCHEMA: string;
+            PRODUCT_FEED_URL?: string;
+            PRODUCT_FEED_CRON?: string;
         }
     }
 }

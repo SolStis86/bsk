@@ -28,3 +28,12 @@ npm run build:server
 - GraphiQL (dev): http://localhost:3000/graphiql/shop-api
 
 Fix build errors introduced by the change; do not leave broken builds.
+
+## Tests
+
+After substantive plugin changes:
+
+```bash
+npm run test -w server
+npm run test:e2e -w server
+```

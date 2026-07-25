@@ -6,24 +6,17 @@ import {NavigationLink} from '@/components/shared/navigation-link';
 import {FooterNewsletter} from '@/components/layout/footer/footer-newsletter';
 import {FooterSocialLinks} from '@/components/layout/footer/footer-social-links';
 import {FooterPaymentIcons} from '@/components/layout/footer/footer-payment-icons';
-import {
-    FOOTER_ABOUT_LINKS,
-    FOOTER_HELP_LINKS,
-    FOOTER_SHOP_COLUMNS,
-} from '@/lib/footer-links';
-import type {NavLinkKey} from '@/lib/nav-links';
-import {MAIN_NAV_LINKS} from '@/lib/nav-links';
-
-const NAV_HREF_BY_KEY = Object.fromEntries(
-    MAIN_NAV_LINKS.map(({key, href}) => [key, href]),
-) as Record<NavLinkKey, string>;
+import {FOOTER_ABOUT_LINKS, FOOTER_HELP_LINKS} from '@/lib/footer-links';
+import {splitIntoColumns} from '@/lib/collection-nav';
+import {getFooterCollections} from '@/lib/vendure/cached';
 
 const COPYRIGHT_YEAR = new Date().getFullYear();
 
 export async function Footer() {
     const locale = await getRouteLocale();
     const t = await getTranslations({locale, namespace: 'Footer'});
-    const navT = await getTranslations({locale, namespace: 'Navigation'});
+    const collections = await getFooterCollections(locale);
+    const shopColumns = splitIntoColumns(collections, 2);
 
     return (
         <footer className="mt-auto bg-white">
@@ -48,14 +41,14 @@ export async function Footer() {
                             {t('shop')}
                         </h3>
                         <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2.5">
-                            {FOOTER_SHOP_COLUMNS.map((column, columnIndex) => (
+                            {shopColumns.map((column, columnIndex) => (
                                 <ul key={columnIndex} className="space-y-2.5">
-                                    {column.map((key) => (
-                                        <li key={key}>
+                                    {column.map((collection) => (
+                                        <li key={collection.slug}>
                                             <FooterLink
-                                                href={NAV_HREF_BY_KEY[key]}
-                                                label={navT(`nav.${key}`)}
-                                                highlight={key === 'sale'}
+                                                href={`/collection/${collection.slug}`}
+                                                label={collection.name}
+                                                highlight={collection.customFields?.navHighlight === true}
                                             />
                                         </li>
                                     ))}

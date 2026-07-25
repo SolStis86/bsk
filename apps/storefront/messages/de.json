@@ -83,7 +83,16 @@
     "shopProductAt": "{name} bei {siteName} kaufen",
     "collectionNotFound": "Kategorie nicht gefunden",
     "browseCollectionAt": "Entdecken Sie unsere {name}-Kollektion bei {siteName}",
+    "subcollections": "Nach Sortiment shoppen",
+    "specs": "Produktdetails",
+    "brand": "Marke",
+    "bodyFit": "Passform",
+    "materials": "Material",
+    "power": "Antrieb",
+    "sizeImperial": "Größe",
     "productCount": "{count, plural, one {# Produkt} other {# Produkte}}",
+    "loadingMore": "Weitere Produkte werden geladen…",
+    "allProductsLoaded": "Alle Produkte geladen",
     "trustBadges": {
       "fastShipping": "Schneller Versand",
       "freeReturns": "Kostenlose Rücksendung",
@@ -120,7 +129,9 @@
   "Filters": {
     "title": "Filter",
     "clearAll": "Alle löschen",
-    "filtersButton": "Filter"
+    "filtersButton": "Filter",
+    "facetBrand": "Marke",
+    "facetCategory": "Kategorie"
   },
   "Cart": {
     "title": "Warenkorb",

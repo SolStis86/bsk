@@ -1,14 +1,30 @@
 import { graphql } from '@/graphql';
-import { ActiveCustomerFragment, ProductCardFragment } from './fragments';
+import { ActiveCustomerFragment, ProductCardFragment, ProductDetailFragment } from './fragments';
 
 export const GetTopCollectionsQuery = graphql(`
     query GetTopCollections {
-        collections(options: { filter: { parentId: { eq: "1" } } }) {
+        collections(options: { topLevelOnly: true }) {
             items {
                 id
                 name
                 slug
+                customFields {
+                    showInMainNav
+                    navSortOrder
+                    navHighlight
+                }
             }
+        }
+    }
+`);
+
+export const GetAllCollectionSlugsQuery = graphql(`
+    query GetAllCollectionSlugs($options: CollectionListOptions) {
+        collections(options: $options) {
+            items {
+                slug
+            }
+            totalItems
         }
     }
 `);
@@ -33,9 +49,11 @@ export const SearchProductsQuery = graphql(`
                 facetValue {
                     id
                     name
+                    code
                     facet {
                         id
                         name
+                        code
                     }
                 }
             }
@@ -46,54 +64,10 @@ export const SearchProductsQuery = graphql(`
 export const GetProductDetailQuery = graphql(`
     query GetProductDetail($slug: String!) {
         product(slug: $slug) {
-            id
-            name
-            description
-            slug
-            assets {
-                id
-                preview
-                source
-            }
-            variants {
-                id
-                name
-                sku
-                priceWithTax
-                stockLevel
-                options {
-                    id
-                    code
-                    name
-                    groupId
-                    group {
-                        id
-                        code
-                        name
-                    }
-                }
-            }
-            optionGroups {
-                id
-                code
-                name
-                options {
-                    id
-                    code
-                    name
-                }
-            }
-            collections {
-                id
-                name
-                slug
-                parent {
-                    id
-                }
-            }
+            ...ProductDetail
         }
     }
-`);
+`, [ProductDetailFragment]);
 
 export const GetActiveOrderQuery = graphql(`
     query GetActiveOrder {
@@ -427,11 +401,35 @@ export const GetCollectionProductsQuery = graphql(`
                 id
                 preview
             }
+            parent {
+                id
+                name
+                slug
+            }
+            children {
+                id
+                name
+                slug
+                productVariantCount
+            }
         }
         search(input: $input) {
             totalItems
             items {
                 ...ProductCard
+            }
+            facetValues {
+                count
+                facetValue {
+                    id
+                    name
+                    code
+                    facet {
+                        id
+                        name
+                        code
+                    }
+                }
             }
         }
     }

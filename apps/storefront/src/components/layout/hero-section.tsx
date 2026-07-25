@@ -2,6 +2,7 @@ import Image from 'next/image';
 import {getTranslations} from 'next-intl/server';
 import {getRouteLocale} from '@/i18n/server';
 import {HeroCtaButtons} from '@/components/brand/hero-cta-buttons';
+import {BEST_SELLERS_COLLECTION_SLUG, NEW_IN_COLLECTION_SLUG} from '@/lib/collection-slugs';
 
 export async function HeroSection() {
     const locale = await getRouteLocale();
@@ -23,6 +24,8 @@ export async function HeroSection() {
                     <HeroCtaButtons
                         shopNewInLabel={t('shopNewIn')}
                         shopCollectionsLabel={t('shopCollections')}
+                        shopNewInHref={`/collection/${NEW_IN_COLLECTION_SLUG}`}
+                        shopCollectionsHref={`/collection/${BEST_SELLERS_COLLECTION_SLUG}`}
                     />
                 </div>
             </div>

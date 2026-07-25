@@ -83,7 +83,16 @@
     "shopProductAt": "Shop {name} at {siteName}",
     "collectionNotFound": "Collection Not Found",
     "browseCollectionAt": "Browse our {name} collection at {siteName}",
+    "subcollections": "Shop by range",
+    "specs": "Product details",
+    "brand": "Brand",
+    "bodyFit": "Body fit",
+    "materials": "Materials",
+    "power": "Power",
+    "sizeImperial": "Size",
     "productCount": "{count, plural, one {# product} other {# products}}",
+    "loadingMore": "Loading more products…",
+    "allProductsLoaded": "All products loaded",
     "trustBadges": {
       "fastShipping": "Fast Shipping",
       "freeReturns": "Free Returns",
@@ -120,7 +129,9 @@
   "Filters": {
     "title": "Filters",
     "clearAll": "Clear all",
-    "filtersButton": "Filters"
+    "filtersButton": "Filters",
+    "facetBrand": "Brand",
+    "facetCategory": "Category"
   },
   "Cart": {
     "title": "Shopping Cart",

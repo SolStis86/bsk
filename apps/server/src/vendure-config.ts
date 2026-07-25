@@ -11,6 +11,9 @@ import { DashboardPlugin } from '@vendure/dashboard/plugin';
 import { GraphiqlPlugin } from '@vendure/graphiql-plugin';
 import 'dotenv/config';
 import path from 'path';
+import { productFeedCustomFields } from './custom-fields';
+import './custom-fields.types';
+import { ProductFeedImportPlugin } from './plugins/product-feed-import/product-feed-import.plugin';
 
 const IS_DEV = process.env.APP_ENV === 'dev';
 const serverPort = +process.env.PORT || 3000;
@@ -58,7 +61,7 @@ export const config: VendureConfig = {
     },
     // When adding or altering custom field definitions, the database will
     // need to be updated. See the "Migrations" section in README.md.
-    customFields: {},
+    customFields: productFeedCustomFields,
     plugins: [
         GraphiqlPlugin.init(),
         AssetServerPlugin.init({
@@ -92,6 +95,17 @@ export const config: VendureConfig = {
             appDir: IS_DEV
                 ? path.join(__dirname, '../dist/dashboard')
                 : path.join(__dirname, 'dashboard'),
+        }),
+        ProductFeedImportPlugin.init({
+            feedUrl:
+                process.env.PRODUCT_FEED_URL ??
+                'https://www.1on1wholesale.co.uk/API/product/export/?type=1',
+            imageZipUrl:
+                process.env.PRODUCT_FEED_IMAGE_ZIP_URL ??
+                'https://www.1on1wholesale.co.uk/API/product/export/images/images.zip',
+            importCron: process.env.PRODUCT_FEED_CRON ?? '0 2 * * *',
+            disableMissingFromFeed: true,
+            devImportLimit: +(process.env.PRODUCT_FEED_DEV_IMPORT_LIMIT ?? 0),
         }),
     ],
 };

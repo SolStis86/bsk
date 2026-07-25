@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { SlidersHorizontal, ChevronDown } from 'lucide-react';
-import { SearchProductsQuery } from "@/lib/vendure/queries";
-import {useTranslations} from 'next-intl';
+import { SearchProductsQuery } from '@/lib/vendure/queries';
+import { buildFacetFilterGroups, type FacetFilterGroup } from '@/lib/facet-filter-helpers';
+import { useTranslations } from 'next-intl';
 
 interface FacetFiltersProps {
     productDataPromise: Promise<{
@@ -26,12 +27,14 @@ function FilterContent({
     toggleFacet,
     clearFilters,
     hasActiveFilters,
+    facetTitle,
 }: {
-    facetGroups: Record<string, { id: string; name: string; values: Array<{ id: string; name: string; count: number }> }>;
+    facetGroups: FacetFilterGroup[];
     selectedFacets: string[];
     toggleFacet: (facetId: string) => void;
     clearFilters: () => void;
     hasActiveFilters: boolean;
+    facetTitle: (code: FacetFilterGroup['code']) => string;
 }) {
     const t = useTranslations('Filters');
     return (
@@ -45,16 +48,16 @@ function FilterContent({
                 )}
             </div>
 
-            {Object.entries(facetGroups).map(([facetName, facet]) => (
-                <Collapsible key={facet.id} defaultOpen>
+            {facetGroups.map(facet => (
+                <Collapsible key={facet.code} defaultOpen>
                     <div className="space-y-2">
                         <CollapsibleTrigger className="flex w-full items-center justify-between py-2 text-sm font-medium hover:text-foreground transition-colors">
-                            {facetName}
+                            {facetTitle(facet.code)}
                             <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform [[data-panel-open]_&]:rotate-180" />
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                             <div className="space-y-2 pb-2">
-                                {facet.values.map((value) => {
+                                {facet.values.map(value => {
                                     const isChecked = selectedFacets.includes(value.id);
                                     return (
                                         <div key={value.id} className="flex items-center space-x-2">
@@ -93,29 +96,17 @@ export function FacetFilters({ productDataPromise }: FacetFiltersProps) {
     const router = useRouter();
     const [sheetOpen, setSheetOpen] = useState(false);
 
-    // Group facet values by facet
-    interface FacetGroup {
-        id: string;
-        name: string;
-        values: Array<{ id: string; name: string; count: number }>;
-    }
+    const facetGroups = buildFacetFilterGroups(searchResult.facetValues);
 
-    const facetGroups = searchResult.facetValues.reduce((acc: Record<string, FacetGroup>, item) => {
-        const facetName = item.facetValue.facet.name;
-        if (!acc[facetName]) {
-            acc[facetName] = {
-                id: item.facetValue.facet.id,
-                name: facetName,
-                values: []
-            };
+    const facetTitle = (code: FacetFilterGroup['code']) => {
+        if (code === 'brand') {
+            return t('facetBrand');
         }
-        acc[facetName].values.push({
-            id: item.facetValue.id,
-            name: item.facetValue.name,
-            count: item.count
-        });
-        return acc;
-    }, {});
+        if (code === 'category') {
+            return t('facetCategory');
+        }
+        return code;
+    };
 
     const selectedFacets = searchParams.getAll('facets');
 
@@ -130,7 +121,6 @@ export function FacetFilters({ productDataPromise }: FacetFiltersProps) {
             params.append('facets', facetId);
         }
 
-        // Reset to page 1 when filters change
         params.delete('page');
 
         router.push(`${pathname}?${params.toString()}`);
@@ -147,7 +137,7 @@ export function FacetFilters({ productDataPromise }: FacetFiltersProps) {
 
     const hasActiveFilters = selectedFacets.length > 0;
 
-    if (Object.keys(facetGroups).length === 0) {
+    if (facetGroups.length === 0) {
         return null;
     }
 
@@ -157,11 +147,11 @@ export function FacetFilters({ productDataPromise }: FacetFiltersProps) {
         toggleFacet,
         clearFilters,
         hasActiveFilters,
+        facetTitle,
     };
 
     return (
         <>
-            {/* Mobile: Sheet trigger */}
             <div className="lg:hidden">
                 <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                     <SheetTrigger
@@ -188,7 +178,6 @@ export function FacetFilters({ productDataPromise }: FacetFiltersProps) {
                 </Sheet>
             </div>
 
-            {/* Desktop: Inline filters */}
             <div className="hidden lg:block">
                 <FilterContent {...filterContentProps} />
             </div>

@@ -260,30 +260,32 @@ Migrations run automatically on server start via `runMigrations()` in `index.ts`
 
 ## Custom fields
 
-Define in plugin `configuration`:
+Define in **`vendure-config.ts`** under `customFields` (see [Custom fields guide](https://github.com/vendurehq/vendure/tree/master/docs/docs/guides/developer-guide/custom-fields)). This is the primary approach for project-specific fields:
 
 ```ts
-configuration: config => {
-    config.customFields.Customer.push({
-        name: 'myField',
-        type: 'string',
-        label: [{ languageCode: LanguageCode.en, value: 'My Field' }],
-    });
-    return config;
-},
+// apps/server/src/vendure-config.ts
+import { productFeedCustomFields } from './custom-fields';
+import './custom-fields.types';
+
+export const config: VendureConfig = {
+    customFields: productFeedCustomFields,
+    // ...
+};
 ```
 
-Add TypeScript augmentation in `types.ts`:
+Add TypeScript augmentation in `custom-fields.types.ts`:
 
 ```ts
 declare module '@vendure/core/dist/entity/custom-entity-fields' {
-    interface CustomCustomerFields {
+    interface CustomProductFields {
         myField: string;
     }
 }
 ```
 
-Import `'./types'` in the plugin file. Custom fields also require migrations.
+Import `'./custom-fields.types'` in `vendure-config.ts`. Custom fields require migrations (`npx vendure migrate -g <name>`).
+
+**Plugins:** use the plugin `configuration` callback to `push` custom fields only when a **reusable npm plugin** must extend entities. For this monorepo’s app-specific fields, prefer `vendure-config.ts` over plugin configuration.
 
 ## Importing data
 

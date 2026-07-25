@@ -3,6 +3,49 @@ import { join, resolve } from 'path';
 import { pathToFileURL } from 'url';
 import { defineConfig } from 'vite';
 
+/**
+ * Recharts 2.x (used by @vendure/dashboard) imports lodash/* as default from CJS shims.
+ * Vite dev serves those without a default export — alias to lodash-es instead.
+ */
+const rechartsLodashModules = [
+    'every',
+    'find',
+    'first',
+    'flatMap',
+    'get',
+    'isBoolean',
+    'isEqual',
+    'isFunction',
+    'isNaN',
+    'isNil',
+    'isNumber',
+    'isObject',
+    'isPlainObject',
+    'isString',
+    'last',
+    'mapValues',
+    'max',
+    'maxBy',
+    'memoize',
+    'min',
+    'minBy',
+    'omit',
+    'range',
+    'some',
+    'sortBy',
+    'sumBy',
+    'throttle',
+    'uniqBy',
+    'upperFirst',
+] as const;
+
+const lodashEsAliases = Object.fromEntries(
+    rechartsLodashModules.map(name => [
+        `lodash/${name}`,
+        resolve(__dirname, '../../node_modules/lodash-es', `${name}.js`),
+    ]),
+);
+
 export default defineConfig({
     base: '/dashboard',
     build: {
@@ -29,11 +72,15 @@ export default defineConfig({
             gqlOutputPath: './src/gql',
         }),
     ],
+    optimizeDeps: {
+        include: ['recharts', ...rechartsLodashModules.map(name => `lodash/${name}`)],
+    },
     resolve: {
         alias: {
             // This allows all plugins to reference a shared set of
             // GraphQL types.
             '@/gql': resolve(__dirname, './src/gql/graphql.ts'),
+            ...lodashEsAliases,
         },
     },
 });

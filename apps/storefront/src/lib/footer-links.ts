@@ -1,5 +1,3 @@
-import type {NavLinkKey} from '@/lib/nav-links';
-
 export type FooterHelpLinkKey =
     | 'helpFaqs'
     | 'deliveryInfo'
@@ -18,11 +16,6 @@ export interface FooterLink {
     key: string;
     href: string;
 }
-
-export const FOOTER_SHOP_COLUMNS: NavLinkKey[][] = [
-    ['newIn', 'bras', 'knickers', 'lingerieSets'],
-    ['bodies', 'nightwear', 'accessories', 'sale'],
-];
 
 export const FOOTER_HELP_LINKS: FooterLink[] = [
     {key: 'helpFaqs', href: '/search?q=help'},
