@@ -38,8 +38,8 @@ describe('OrderProfitSnapshotService', () => {
         };
         const supplierProviderService = {
             getDefaultShippingRule: vi.fn().mockResolvedValue({
-                code: 'tracked',
-                costExVat: 3.6,
+                code: 'evri_standard',
+                costExVat: 3.4,
             }),
         };
         const service = new OrderProfitSnapshotService(
@@ -51,9 +51,9 @@ describe('OrderProfitSnapshotService', () => {
         const snapshot = await service.captureSnapshot({} as any, '1');
         expect(snapshot).not.toBeNull();
         expect(snapshot!.providers).toHaveLength(2);
-        expect(snapshot!.providers[0].shippingCostExVat).toBe(360);
+        expect(snapshot!.providers[0].shippingCostExVat).toBe(340);
         expect(snapshot!.providers[0].lines[0].lineCogsExVat).toBe(560);
-        expect(snapshot!.estimatedCostExVat).toBe(560 + 360 + 150 + 360);
+        expect(snapshot!.estimatedCostExVat).toBe(560 + 340 + 150 + 340);
         expect(orderService.updateCustomFields).toHaveBeenCalledOnce();
     });
 });

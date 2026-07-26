@@ -1,15 +1,14 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { RequestContext, RequestContextService, TransactionalConnection } from '@vendure/core';
+import { In, Not } from 'typeorm';
 
 import { DEFAULT_PROVIDER_CODE, DEFAULT_VAT_RATE_PERCENT } from '../constants';
+import {
+    ONE_ON_ONE_SHIPPING_RULE_CODES,
+    ONE_ON_ONE_SHIPPING_RULES,
+} from '../constants/one-on-one-shipping-rules';
 import { ProductSupplierProvider } from '../entities/product-supplier-provider.entity';
 import { SupplierShippingRule } from '../entities/supplier-shipping-rule.entity';
-
-const ONE_ON_ONE_SHIPPING_RULES = [
-    { code: 'tracked', name: 'Tracked delivery', costExVat: 3.6, isDefault: true, sortOrder: 0 },
-    { code: 'next_day', name: 'Next day delivery', costExVat: 5.95, isDefault: false, sortOrder: 1 },
-    { code: 'europe', name: 'Europe delivery', costExVat: 15.3, isDefault: false, sortOrder: 2 },
-] as const;
 
 @Injectable()
 export class ProviderSeedService implements OnApplicationBootstrap {
@@ -25,28 +24,35 @@ export class ProviderSeedService implements OnApplicationBootstrap {
 
     async seedOneOnOneProvider(ctx: RequestContext): Promise<ProductSupplierProvider> {
         const providerRepo = this.connection.getRepository(ctx, ProductSupplierProvider);
-        const existing = await providerRepo.findOne({
+        let provider = await providerRepo.findOne({
             where: { code: DEFAULT_PROVIDER_CODE },
             relations: ['shippingRules'],
         });
-        if (existing) {
-            return existing;
-        }
 
-        const provider = await providerRepo.save(
-            new ProductSupplierProvider({
-                code: DEFAULT_PROVIDER_CODE,
-                name: '1on1 Wholesale',
-                tradePriceIncludesVat: false,
-                defaultVatRatePercent: DEFAULT_VAT_RATE_PERCENT,
-                active: true,
-            }),
-        );
+        if (!provider) {
+            provider = await providerRepo.save(
+                new ProductSupplierProvider({
+                    code: DEFAULT_PROVIDER_CODE,
+                    name: '1on1 Wholesale',
+                    tradePriceIncludesVat: false,
+                    defaultVatRatePercent: DEFAULT_VAT_RATE_PERCENT,
+                    active: true,
+                }),
+            );
+        }
 
         const ruleRepo = this.connection.getRepository(ctx, SupplierShippingRule);
         for (const rule of ONE_ON_ONE_SHIPPING_RULES) {
+            const existingRule = await ruleRepo.findOne({
+                where: {
+                    providerId: provider.id as number,
+                    code: rule.code,
+                },
+            });
+
             await ruleRepo.save(
                 new SupplierShippingRule({
+                    ...(existingRule ?? {}),
                     providerId: provider.id as number,
                     provider,
                     code: rule.code,
@@ -54,11 +60,28 @@ export class ProviderSeedService implements OnApplicationBootstrap {
                     costExVat: rule.costExVat,
                     isDefault: rule.isDefault,
                     sortOrder: rule.sortOrder,
-                    customerShippingMethodCode: null,
+                    customerShippingMethodCode: rule.customerShippingMethodCode,
                 }),
             );
         }
 
-        return provider;
+        await ruleRepo.delete({
+            providerId: provider.id as number,
+            code: Not(In(ONE_ON_ONE_SHIPPING_RULE_CODES)),
+        });
+
+        if (ONE_ON_ONE_SHIPPING_RULES.some(rule => rule.isDefault)) {
+            const defaultCode = ONE_ON_ONE_SHIPPING_RULES.find(rule => rule.isDefault)!.code;
+            const rules = await ruleRepo.find({ where: { providerId: provider.id as number } });
+            for (const rule of rules) {
+                rule.isDefault = rule.code === defaultCode;
+                await ruleRepo.save(rule);
+            }
+        }
+
+        return providerRepo.findOneOrFail({
+            where: { id: provider.id },
+            relations: ['shippingRules'],
+        });
     }
 }

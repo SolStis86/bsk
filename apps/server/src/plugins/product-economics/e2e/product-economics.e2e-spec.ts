@@ -167,9 +167,12 @@ describe('ProductEconomics e2e', () => {
             (entry: { code: string }) => entry.code === '1on1',
         );
         expect(provider).toBeDefined();
-        expect(provider.shippingRules).toHaveLength(3);
-        expect(provider.shippingRules.find((rule: { code: string }) => rule.code === 'tracked')?.isDefault).toBe(
-            true,
-        );
+        expect(provider.shippingRules).toHaveLength(6);
+        expect(
+            provider.shippingRules.find((rule: { code: string }) => rule.code === 'evri_standard')?.isDefault,
+        ).toBe(true);
+        expect(
+            provider.shippingRules.find((rule: { code: string }) => rule.code === 'evri_standard')?.costExVat,
+        ).toBe(3.4);
     });
 });

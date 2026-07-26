@@ -5,6 +5,7 @@ import { Link } from '@/i18n/navigation';
 import Image from 'next/image';
 import {Separator} from '@/components/ui/separator';
 import {Price} from '@/components/commerce/price';
+import {OrderConfirmationPoller} from './order-confirmation-poller';
 import {notFound} from 'next/navigation';
 import {getRouteLocale} from '@/i18n/server';
 import {getTranslations} from 'next-intl/server';
@@ -67,7 +68,8 @@ export async function OrderConfirmation({paramsPromise}: OrderConfirmationProps)
     }
 
     return (
-        <div className="container mx-auto px-4 py-16">
+        <OrderConfirmationPoller orderCode={order.code} initialState={order.state}>
+            <div className="container mx-auto px-4 py-16">
             <div className="max-w-3xl mx-auto">
                 <div className="text-center mb-10">
                     <div className="flex justify-center mb-6">
@@ -163,5 +165,6 @@ export async function OrderConfirmation({paramsPromise}: OrderConfirmationProps)
                 </div>
             </div>
         </div>
+        </OrderConfirmationPoller>
     );
 }

@@ -310,6 +310,14 @@ When exposing new Shop API functionality, specify for the storefront agent:
 
 The storefront fetches via `query()` / `mutate()` in `apps/storefront/src/lib/vendure/` with `gql.tada` — match existing patterns there.
 
+## Stripe payments
+
+- Plugin: `@vendure-community/stripe-plugin` in `vendure-config.ts`
+- Webhook route: `POST /payments/stripe` (raw body middleware registered by plugin)
+- Admin payment method handler code: `stripe`; storefront expects payment method **code** `stripe`
+- Local dev: `stripe listen --forward-to localhost:3000/payments/stripe`; worker must run for settlement
+- See [`plans/stripe-payments/README.md`](../../plans/stripe-payments/README.md)
+
 ## Quality checks
 
 After substantive backend changes:
