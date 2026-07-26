@@ -36,6 +36,19 @@ export const productFeedCustomFields: CustomFields = {
             label: [{ languageCode: LanguageCode.en, value: 'Last seen in feed' }],
             readonly: true,
         },
+        {
+            name: 'supplierProviderCode',
+            type: 'string',
+            defaultValue: '1on1',
+            readonly: true,
+            label: [{ languageCode: LanguageCode.en, value: 'Supplier provider code' }],
+            description: [
+                {
+                    languageCode: LanguageCode.en,
+                    value: 'Wholesale provider used for trade cost and shipping estimates.',
+                },
+            ],
+        },
     ],
     ProductVariant: [
         {
@@ -47,7 +60,7 @@ export const productFeedCustomFields: CustomFields = {
         {
             name: 'tradePrice',
             type: 'float',
-            label: [{ languageCode: LanguageCode.en, value: 'Trade price' }],
+            label: [{ languageCode: LanguageCode.en, value: 'Trade price (ex VAT)' }],
             readonly: true,
         },
         {
@@ -133,6 +146,32 @@ export const productFeedCustomFields: CustomFields = {
                 {
                     languageCode: LanguageCode.en,
                     value: 'JSON array of enabled feed category tags (all_cats). Managed via Settings → Product categories.',
+                },
+            ],
+        },
+        {
+            name: 'profitCalculationVatMode',
+            type: 'string',
+            defaultValue: 'net',
+            label: [{ languageCode: LanguageCode.en, value: 'Profit calculation VAT mode' }],
+            description: [
+                {
+                    languageCode: LanguageCode.en,
+                    value: 'Use "net" when VAT registered (compare ex-VAT revenue vs cost). Use "gross" when not registered.',
+                },
+            ],
+        },
+    ],
+    Order: [
+        {
+            name: 'profitSnapshot',
+            type: 'text',
+            readonly: true,
+            label: [{ languageCode: LanguageCode.en, value: 'Profit snapshot' }],
+            description: [
+                {
+                    languageCode: LanguageCode.en,
+                    value: 'Estimated order profitability captured when payment settles.',
                 },
             ],
         },

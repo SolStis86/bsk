@@ -6,6 +6,7 @@ export const defaultProductFeedImportPluginOptions: PluginInitOptions = {
     importCron: '0 2 * * *',
     disableMissingFromFeed: true,
     devImportLimit: 0,
+    providerCode: '1on1',
     storefrontUrl: 'http://localhost:3001',
     revalidationSecret: 'test-secret',
     scheduleEnabled: false,

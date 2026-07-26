@@ -61,6 +61,7 @@ describe('CatalogSyncService', () => {
             getEnabledTags: vi.fn().mockResolvedValue(['Anal Toys']),
             isProductEnabled: vi.fn().mockReturnValue(true),
         };
+        const options = { providerCode: '1on1' };
         const stockMovementService = {
             adjustProductVariantStock: vi.fn(),
         };
@@ -82,6 +83,7 @@ describe('CatalogSyncService', () => {
             taxCategoryService as never,
             taxonomySyncService as never,
             categoryAvailabilityService as never,
+            options as never,
         );
 
         const ctx = { channelId: '1', channel: { defaultCurrencyCode: 'GBP' } } as never;
@@ -100,6 +102,7 @@ describe('CatalogSyncService', () => {
                 ],
                 customFields: expect.objectContaining({
                     sourceProductCode: 'N8440',
+                    supplierProviderCode: '1on1',
                 }),
             }),
         );
@@ -146,6 +149,7 @@ describe('CatalogSyncService', () => {
                 createQueryBuilder: vi.fn().mockReturnValue(queryBuilder),
             }),
         };
+        const options = { providerCode: '1on1' };
 
         const service = new CatalogSyncService(
             connection as never,
@@ -158,6 +162,7 @@ describe('CatalogSyncService', () => {
             {} as never,
             {} as never,
             {} as never,
+            options as never,
         );
 
         const result = await service.disableMissingFromFeed(

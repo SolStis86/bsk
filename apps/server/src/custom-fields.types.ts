@@ -5,6 +5,7 @@ declare module '@vendure/core/dist/entity/custom-entity-fields' {
         power: string;
         sizeImperial: string;
         lastSeenInFeedAt: Date | null;
+        supplierProviderCode: string;
     }
 
     interface CustomProductVariantFields {
@@ -25,5 +26,10 @@ declare module '@vendure/core/dist/entity/custom-entity-fields' {
     interface CustomGlobalSettingsFields {
         enabledParentCategorySlugs: string;
         enabledCategoryTags: string;
+        profitCalculationVatMode: string;
+    }
+
+    interface CustomOrderFields {
+        profitSnapshot: string;
     }
 }

@@ -14,7 +14,7 @@ import { ProductFeedImportPlugin } from '../product-feed-import.plugin';
 import { defaultProductFeedImportPluginOptions } from '../test/plugin-options.fixture';
 import { e2eInitialData } from './fixtures/e2e-initial-data';
 
-const sqliteDataDir = path.join(__dirname, '__data-product-feed-import');
+const sqliteDataDir = path.join(__dirname, '__data-product-feed-import-v2');
 registerInitializer('sqljs', new SqljsInitializer(sqliteDataDir));
 
 describe('ProductFeedImportPlugin e2e', () => {

@@ -13,6 +13,7 @@ import 'dotenv/config';
 import path from 'path';
 import { productFeedCustomFields } from './custom-fields';
 import './custom-fields.types';
+import { ProductEconomicsPlugin } from './plugins/product-economics/product-economics.plugin';
 import { ProductFeedImportPlugin } from './plugins/product-feed-import/product-feed-import.plugin';
 import { StockFeedSyncPlugin } from './plugins/stock-feed-sync/stock-feed-sync.plugin';
 import { WishlistPlugin } from './plugins/wishlist/wishlist.plugin';
@@ -108,6 +109,7 @@ export const config: VendureConfig = {
             importCron: process.env.PRODUCT_FEED_CRON ?? '0 2 * * *',
             disableMissingFromFeed: true,
             devImportLimit: +(process.env.PRODUCT_FEED_DEV_IMPORT_LIMIT ?? 0),
+            providerCode: process.env.PRODUCT_FEED_PROVIDER_CODE ?? '1on1',
             storefrontUrl: process.env.STOREFRONT_URL ?? 'http://localhost:3001',
             revalidationSecret: process.env.REVALIDATION_SECRET ?? '',
             scheduleEnabled: process.env.PRODUCT_FEED_SCHEDULE_ENABLED !== 'false' && !IS_DEV,
@@ -123,5 +125,8 @@ export const config: VendureConfig = {
             devSyncLimit: +(process.env.STOCK_FEED_DEV_SYNC_LIMIT ?? 0),
         }),
         WishlistPlugin,
+        ProductEconomicsPlugin.init({
+            defaultProviderCode: process.env.PRODUCT_FEED_PROVIDER_CODE ?? '1on1',
+        }),
     ],
 };

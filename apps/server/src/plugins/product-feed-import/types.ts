@@ -8,6 +8,8 @@ export interface PluginInitOptions {
     disableMissingFromFeed: boolean;
     /** When > 0, limits import unless overridden by mutation/CLI. 0 = no limit. */
     devImportLimit: number;
+    /** Supplier provider code stamped on imported products. */
+    providerCode?: string;
     storefrontUrl: string;
     revalidationSecret: string;
     scheduleEnabled: boolean;
