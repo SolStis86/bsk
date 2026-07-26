@@ -21,6 +21,10 @@ declare global {
             PRODUCT_FEED_SCHEDULE_ENABLED?: string;
             PRODUCT_FEED_ASSET_QUEUE_ENABLED?: string;
             PRODUCT_FEED_STALE_HOURS?: string;
+            STOCK_FEED_URL?: string;
+            STOCK_FEED_CRON?: string;
+            STOCK_FEED_SCHEDULE_ENABLED?: string;
+            STOCK_FEED_DEV_SYNC_LIMIT?: string;
             STOREFRONT_URL?: string;
             STOREFRONT_DEFAULT_LOCALE?: string;
             REVALIDATION_SECRET?: string;

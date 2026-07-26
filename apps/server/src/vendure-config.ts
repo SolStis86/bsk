@@ -14,6 +14,7 @@ import path from 'path';
 import { productFeedCustomFields } from './custom-fields';
 import './custom-fields.types';
 import { ProductFeedImportPlugin } from './plugins/product-feed-import/product-feed-import.plugin';
+import { StockFeedSyncPlugin } from './plugins/stock-feed-sync/stock-feed-sync.plugin';
 import { WishlistPlugin } from './plugins/wishlist/wishlist.plugin';
 
 const IS_DEV = process.env.APP_ENV === 'dev';
@@ -112,6 +113,14 @@ export const config: VendureConfig = {
             scheduleEnabled: process.env.PRODUCT_FEED_SCHEDULE_ENABLED !== 'false' && !IS_DEV,
             assetQueueEnabled: process.env.PRODUCT_FEED_ASSET_QUEUE_ENABLED !== 'false',
             staleImportThresholdHours: +(process.env.PRODUCT_FEED_STALE_HOURS ?? 36),
+        }),
+        StockFeedSyncPlugin.init({
+            feedUrl:
+                process.env.STOCK_FEED_URL ??
+                'https://www.1on1wholesale.co.uk/API/product/export/stock/',
+            syncCron: process.env.STOCK_FEED_CRON ?? '*/5 * * * *',
+            scheduleEnabled: process.env.STOCK_FEED_SCHEDULE_ENABLED !== 'false' && !IS_DEV,
+            devSyncLimit: +(process.env.STOCK_FEED_DEV_SYNC_LIMIT ?? 0),
         }),
         WishlistPlugin,
     ],

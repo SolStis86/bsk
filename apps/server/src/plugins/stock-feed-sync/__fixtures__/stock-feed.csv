@@ -1,0 +1,6 @@
+SKU,Stock,StockLevel,Price
+N8440,"In Stock",150,2.8
+N7988,"Out Stock",0,6.7
+N5377,Discontinued,0,14.00
+NTEST1,"In Stock",42,9.99
+NTEST2,"Out Stock",0,4.50
