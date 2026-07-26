@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { GlobalFlag } from '@vendure/common/lib/generated-types';
 import {
     ID,
@@ -23,6 +23,8 @@ import { sanitizeProductDescription } from '../utils/html-sanitize';
 import { toMinorUnits } from '../utils/price.utils';
 import { TaxonomySyncService } from './taxonomy-sync.service';
 import { CategoryAvailabilityService } from './category-availability.service';
+import { PRODUCT_FEED_IMPORT_PLUGIN_OPTIONS } from '../constants';
+import { PluginInitOptions } from '../types';
 
 @Injectable()
 export class CatalogSyncService {
@@ -39,6 +41,7 @@ export class CatalogSyncService {
         private taxCategoryService: TaxCategoryService,
         private taxonomySyncService: TaxonomySyncService,
         private categoryAvailabilityService: CategoryAvailabilityService,
+        @Inject(PRODUCT_FEED_IMPORT_PLUGIN_OPTIONS) private options: PluginInitOptions,
     ) {}
 
     async upsert(ctx: RequestContext, product: NormalizedProduct): Promise<CatalogSyncResult> {
@@ -61,6 +64,7 @@ export class CatalogSyncService {
             power: product.power ?? '',
             sizeImperial: product.sizeImperial ?? '',
             lastSeenInFeedAt: now,
+            supplierProviderCode: this.options.providerCode ?? '1on1',
         };
 
         const description = sanitizeProductDescription(product.description);

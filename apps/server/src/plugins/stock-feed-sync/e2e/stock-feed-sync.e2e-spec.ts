@@ -21,7 +21,7 @@ import { StockFeedSyncPlugin } from '../stock-feed-sync.plugin';
 import { StockFeedSyncService } from '../services/stock-feed-sync.service';
 import { defaultStockFeedSyncPluginOptions } from '../test/plugin-options.fixture';
 
-const sqliteDataDir = path.join(__dirname, '__data-stock-feed-sync');
+const sqliteDataDir = path.join(__dirname, '__data-stock-feed-sync-v2');
 const productFixturesDir = path.join(__dirname, '../../product-feed-import/__fixtures__');
 const stockFixturesDir = path.join(__dirname, '../__fixtures__');
 

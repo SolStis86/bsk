@@ -18,7 +18,7 @@ import { ProductFeedImportService } from '../services/product-feed-import.servic
 import { defaultProductFeedImportPluginOptions } from '../test/plugin-options.fixture';
 import { e2eInitialData } from './fixtures/e2e-initial-data';
 
-const sqliteDataDir = path.join(__dirname, '__data-catalog-sync');
+const sqliteDataDir = path.join(__dirname, '__data-catalog-sync-v2');
 const fixturesDir = path.join(__dirname, '../__fixtures__');
 
 registerInitializer('sqljs', new SqljsInitializer(sqliteDataDir));
