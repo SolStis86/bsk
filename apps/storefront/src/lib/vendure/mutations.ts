@@ -290,6 +290,12 @@ export const AddPaymentToOrderMutation = graphql(`
     }
 `);
 
+export const CreateStripePaymentIntentMutation = graphql(`
+    mutation CreateStripePaymentIntent {
+        createStripePaymentIntent
+    }
+`);
+
 export const RegisterCustomerAccountMutation = graphql(`
     mutation RegisterCustomerAccount($input: RegisterCustomerInput!) {
         registerCustomerAccount(input: $input) {

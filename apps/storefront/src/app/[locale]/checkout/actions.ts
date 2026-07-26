@@ -6,6 +6,7 @@ import {
     SetOrderBillingAddressMutation,
     SetOrderShippingMethodMutation,
     AddPaymentToOrderMutation,
+    CreateStripePaymentIntentMutation,
     CreateCustomerAddressMutation,
     TransitionOrderToStateMutation,
     SetCustomerForOrderMutation,
@@ -13,6 +14,7 @@ import {
 import {revalidatePath, updateTag} from 'next/cache';
 import {redirect} from '@/i18n/navigation';
 import {getLocale} from 'next-intl/server';
+import {isStripePaymentMethod} from '@/lib/stripe';
 
 interface AddressInput {
     fullName: string;
@@ -101,7 +103,37 @@ export async function transitionToArrangingPayment() {
     revalidatePath(`/${locale}/checkout`);
 }
 
+export async function prepareStripePayment(): Promise<{ clientSecret: string; orderCode: string }> {
+    await transitionToArrangingPayment();
+
+    const {GetActiveOrderForCheckoutQuery} = await import('@/lib/vendure/queries');
+    const {query} = await import('@/lib/vendure/api');
+    const {getActiveCurrencyCode} = await import('@/lib/currency-server');
+    const currencyCode = await getActiveCurrencyCode();
+
+    const [intentResult, orderRes] = await Promise.all([
+        mutate(CreateStripePaymentIntentMutation, {}, {useAuthToken: true}),
+        query(GetActiveOrderForCheckoutQuery, {}, {useAuthToken: true, currencyCode}),
+    ]);
+
+    const clientSecret = intentResult.data.createStripePaymentIntent;
+    const orderCode = orderRes.data.activeOrder?.code;
+
+    if (!clientSecret || !orderCode) {
+        throw new Error('Failed to prepare Stripe payment');
+    }
+
+    const locale = await getLocale();
+    revalidatePath(`/${locale}/checkout`);
+
+    return {clientSecret, orderCode};
+}
+
 export async function placeOrder(paymentMethodCode: string) {
+    if (isStripePaymentMethod(paymentMethodCode)) {
+        throw new Error('Stripe payments must be completed via the Payment Element, not placeOrder');
+    }
+
     // First, transition the order to ArrangingPayment state
     await transitionToArrangingPayment();
 

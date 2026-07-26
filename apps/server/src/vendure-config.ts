@@ -1,3 +1,4 @@
+import { StripePlugin } from '@vendure-community/stripe-plugin';
 import {
     dummyPaymentHandler,
     DefaultJobQueuePlugin,
@@ -127,6 +128,10 @@ export const config: VendureConfig = {
         WishlistPlugin,
         ProductEconomicsPlugin.init({
             defaultProviderCode: process.env.PRODUCT_FEED_PROVIDER_CODE ?? '1on1',
+        }),
+        StripePlugin.init({
+            storeCustomersInStripe: true,
+            skipPaymentIntentsWithoutExpectedMetadata: true,
         }),
     ],
 };

@@ -27,13 +27,18 @@ Formula helpers live in `utils/economics.utils.ts`.
 
 ## 1on1 provider defaults
 
-Seeded on bootstrap when no provider exists:
+Seeded (and synced) on bootstrap from `constants/one-on-one-shipping-rules.ts`:
 
-| Shipping rule | Cost (ex VAT) | Default |
-|---|---|---|
-| `tracked` | £3.60 | yes |
-| `next_day` | £5.95 | |
-| `europe` | £15.30 | |
+| Shipping rule | Cost (ex VAT) | Default | Customer method code |
+|---|---|---|---|
+| `evri_standard` | £3.40 | yes | `evri-standard` |
+| `evri_express` | £4.13 | | `evri-express` |
+| `dhl_express` | £4.95 | | `dhl-express` |
+| `europe` | £15.30 | | `europe-dropship` |
+| `rest_of_world` | £25.40 | | `row-dropship` |
+| `us` | £26.00 | | `us-dropship` |
+
+These are **supplier wholesale costs** used for profit snapshots. Customer checkout rates are configured separately as Vendure shipping methods (Admin → Settings → Shipping methods). Link them via `customerShippingMethodCode` on each rule when you want order profit snapshots to use the selected checkout method instead of the provider default.
 
 Products imported via the product feed are tagged with `Product.customFields.supplierProviderCode` (default `1on1`).
 
