@@ -1,4 +1,6 @@
 import type {Metadata} from 'next';
+import {Suspense} from 'react';
+import {cacheLife} from 'next/cache';
 import {query} from '@/lib/vendure/api';
 import {GetCustomerOrdersQuery} from '@/lib/vendure/queries';
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from '@/components/ui/table';
@@ -19,6 +21,7 @@ import {formatDate} from '@/lib/format';
 import { Link } from '@/i18n/navigation';
 import {getRouteLocale} from '@/i18n/server';
 import {getTranslations} from 'next-intl/server';
+import OrdersLoading from './loading';
 
 export async function generateMetadata(): Promise<Metadata> {
     const locale = await getRouteLocale();
@@ -32,9 +35,21 @@ const ITEMS_PER_PAGE = 10;
 
 export default async function OrdersPage(props: PageProps<'/[locale]/account/orders'>) {
     const searchParams = await props.searchParams;
-    const locale = await getRouteLocale();
     const pageParam = searchParams.page;
     const currentPage = parseInt(Array.isArray(pageParam) ? pageParam[0] : pageParam || '1', 10);
+
+    return (
+        <Suspense fallback={<OrdersLoading />} key={currentPage}>
+            <OrdersContent currentPage={currentPage} />
+        </Suspense>
+    );
+}
+
+async function OrdersContent({currentPage}: {currentPage: number}) {
+    'use cache: private';
+    cacheLife('minutes');
+
+    const locale = await getRouteLocale();
     const skip = (currentPage - 1) * ITEMS_PER_PAGE;
 
     const {data} = await query(

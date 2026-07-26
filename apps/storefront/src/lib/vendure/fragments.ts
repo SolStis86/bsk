@@ -5,6 +5,8 @@ export const ProductCardFragment = graphql(`
         productId
         productName
         slug
+        productVariantId
+        inStock
         productAsset {
             id
             preview
@@ -96,5 +98,28 @@ export const ActiveCustomerFragment = graphql(`
         firstName
         lastName
         emailAddress
+    }
+`);
+
+export const WishlistItemFragment = graphql(`
+    fragment WishlistItem on WishlistItem {
+        id
+        productVariantId
+        productVariant {
+            id
+            name
+            sku
+            stockLevel
+            priceWithTax
+            product {
+                id
+                name
+                slug
+                featuredAsset {
+                    id
+                    preview
+                }
+            }
+        }
     }
 `);

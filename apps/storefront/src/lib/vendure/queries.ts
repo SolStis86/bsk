@@ -1,5 +1,5 @@
 import { graphql } from '@/graphql';
-import { ActiveCustomerFragment, ProductCardFragment, ProductDetailFragment } from './fragments';
+import { ActiveCustomerFragment, ProductCardFragment, ProductDetailFragment, WishlistItemFragment } from './fragments';
 
 export const GetTopCollectionsQuery = graphql(`
     query GetTopCollections {
@@ -434,3 +434,11 @@ export const GetCollectionProductsQuery = graphql(`
         }
     }
 `, [ProductCardFragment]);
+
+export const GetActiveCustomerWishlistQuery = graphql(`
+    query GetActiveCustomerWishlist {
+        activeCustomerWishlist {
+            ...WishlistItem
+        }
+    }
+`, [WishlistItemFragment]);

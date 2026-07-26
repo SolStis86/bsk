@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Link } from '@/i18n/navigation';
 import { query } from '@/lib/vendure/api';
 import { GetProductDetailQuery } from '@/lib/vendure/queries';
-import { ProductDetailFragment } from '@/lib/vendure/fragments';
+import { ProductDetailFragment, WishlistItemFragment } from '@/lib/vendure/fragments';
 import { readFragment } from '@/graphql';
 import { ProductImageCarousel } from '@/components/commerce/product-image-carousel';
 import { ProductInfo } from '@/components/commerce/product-info';
@@ -37,6 +37,8 @@ import {getTranslations} from 'next-intl/server';
 import {toOgLocale} from '@/i18n/locale-utils';
 import {getActiveCurrencyCode} from '@/lib/currency-server';
 import {getRouteLocale} from '@/i18n/server';
+import {getAuthToken} from '@/lib/auth';
+import {GetActiveCustomerWishlistQuery} from '@/lib/vendure/queries';
 import {sanitizeProductDescription} from '@/lib/sanitize-html';
 
 async function getProductData(slug: string, currencyCode: string) {
@@ -129,6 +131,26 @@ export default async function ProductDetailPage({params, searchParams}: PageProp
         optionGroups: getDisplayOptionGroups(product),
     };
 
+    const authToken = await getAuthToken();
+    const isAuthenticated = Boolean(authToken);
+    const wishlistItemIdByVariantId: Record<string, string> = {};
+
+    if (authToken) {
+        try {
+            const wishlistResult = await query(GetActiveCustomerWishlistQuery, undefined, {
+                token: authToken,
+                languageCode: locale,
+                currencyCode,
+            });
+            for (const itemRef of wishlistResult.data.activeCustomerWishlist) {
+                const item = readFragment(WishlistItemFragment, itemRef);
+                wishlistItemIdByVariantId[item.productVariantId] = item.id;
+            }
+        } catch {
+            // Wishlist unavailable — heart buttons still render for sign-in/add flows
+        }
+    }
+
     return (
         <>
             <div className="container mx-auto px-4 py-8">
@@ -173,7 +195,14 @@ export default async function ProductDetailPage({params, searchParams}: PageProp
 
                     {/* Right Column: Product Info */}
                     <div>
-                        <ProductInfo product={productForDisplay} searchParams={searchParamsResolved} currencyCode={currencyCode} />
+                        <ProductInfo
+                            product={productForDisplay}
+                            searchParams={searchParamsResolved}
+                            currencyCode={currencyCode}
+                            productSlug={product.slug}
+                            isAuthenticated={isAuthenticated}
+                            wishlistItemIdByVariantId={wishlistItemIdByVariantId}
+                        />
                     </div>
                 </div>
             </div>

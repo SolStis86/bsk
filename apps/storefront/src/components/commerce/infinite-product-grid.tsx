@@ -14,6 +14,8 @@ interface InfiniteProductGridProps {
     initialItems: FragmentOf<typeof ProductCardFragment>[];
     totalItems: number;
     collectionSlug?: string;
+    wishlistByVariantId?: Record<string, string>;
+    isAuthenticated?: boolean;
 }
 
 function searchParamsRecord(
@@ -41,6 +43,8 @@ export function InfiniteProductGrid({
     initialItems,
     totalItems,
     collectionSlug,
+    wishlistByVariantId = {},
+    isAuthenticated = false,
 }: InfiniteProductGridProps) {
     const t = useTranslations('Product');
     const searchParams = useSearchParams();
@@ -137,7 +141,12 @@ export function InfiniteProductGrid({
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {items.map(product => (
-                    <ProductCard key={getProductId(product)} product={product} />
+                    <ProductCard
+                        key={getProductId(product)}
+                        product={product}
+                        wishlistByVariantId={wishlistByVariantId}
+                        isAuthenticated={isAuthenticated}
+                    />
                 ))}
             </div>
 

@@ -445,6 +445,25 @@
       "verifyingDesc": "Please wait while we verify your email address."
     }
   },
+  "Wishlist": {
+    "title": "My Wishlist",
+    "description": "Products you have saved for later.",
+    "empty": "Your wishlist is empty",
+    "emptyMessage": "Save items you love by tapping the heart on a product page.",
+    "continueShopping": "Continue shopping",
+    "remove": "Remove",
+    "add": "Save to wishlist",
+    "added": "Added to wishlist",
+    "removed": "Removed from wishlist",
+    "addToCart": "Add to cart",
+    "addedToCart": "Added to cart",
+    "signInToSave": "Sign in to save to wishlist",
+    "outOfStock": "Out of stock",
+    "noImage": "No image",
+    "errorTitle": "Error",
+    "errorAdd": "Failed to add item to wishlist",
+    "errorRemove": "Failed to remove item from wishlist"
+  },
   "NotFound": {
     "title": "Page Not Found",
     "message": "The page you are looking for does not exist, has been moved, or is temporarily unavailable.",

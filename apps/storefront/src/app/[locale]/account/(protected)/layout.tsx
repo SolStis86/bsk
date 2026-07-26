@@ -1,10 +1,19 @@
+import {Suspense} from 'react';
 import {requireAuthenticatedCustomer} from '@/lib/auth/require-authenticated-customer';
 
-export default async function ProtectedAccountLayout({
+async function AuthenticatedAccountGate({children}: {children: React.ReactNode}) {
+    await requireAuthenticatedCustomer();
+    return children;
+}
+
+export default function ProtectedAccountLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    await requireAuthenticatedCustomer();
-    return children;
+    return (
+        <Suspense fallback={null}>
+            <AuthenticatedAccountGate>{children}</AuthenticatedAccountGate>
+        </Suspense>
+    );
 }

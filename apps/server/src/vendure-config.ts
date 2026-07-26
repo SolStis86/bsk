@@ -14,6 +14,7 @@ import path from 'path';
 import { productFeedCustomFields } from './custom-fields';
 import './custom-fields.types';
 import { ProductFeedImportPlugin } from './plugins/product-feed-import/product-feed-import.plugin';
+import { WishlistPlugin } from './plugins/wishlist/wishlist.plugin';
 
 const IS_DEV = process.env.APP_ENV === 'dev';
 const serverPort = +process.env.PORT || 3000;
@@ -112,5 +113,6 @@ export const config: VendureConfig = {
             assetQueueEnabled: process.env.PRODUCT_FEED_ASSET_QUEUE_ENABLED !== 'false',
             staleImportThresholdHours: +(process.env.PRODUCT_FEED_STALE_HOURS ?? 36),
         }),
+        WishlistPlugin,
     ],
 };

@@ -445,6 +445,25 @@
       "verifyingDesc": "Bitte warten Sie, während wir Ihre E-Mail-Adresse bestätigen."
     }
   },
+  "Wishlist": {
+    "title": "Meine Wunschliste",
+    "description": "Produkte, die Sie für später gespeichert haben.",
+    "empty": "Ihre Wunschliste ist leer",
+    "emptyMessage": "Speichern Sie Produkte, indem Sie das Herz auf der Produktseite antippen.",
+    "continueShopping": "Weiter einkaufen",
+    "remove": "Entfernen",
+    "add": "Zur Wunschliste hinzufügen",
+    "added": "Zur Wunschliste hinzugefügt",
+    "removed": "Von der Wunschliste entfernt",
+    "addToCart": "In den Warenkorb",
+    "addedToCart": "In den Warenkorb gelegt",
+    "signInToSave": "Anmelden, um zur Wunschliste hinzuzufügen",
+    "outOfStock": "Nicht auf Lager",
+    "noImage": "Kein Bild",
+    "errorTitle": "Fehler",
+    "errorAdd": "Produkt konnte nicht zur Wunschliste hinzugefügt werden",
+    "errorRemove": "Produkt konnte nicht von der Wunschliste entfernt werden"
+  },
   "NotFound": {
     "title": "Seite nicht gefunden",
     "message": "Die gesuchte Seite existiert nicht, wurde verschoben oder ist vorübergehend nicht verfügbar.",

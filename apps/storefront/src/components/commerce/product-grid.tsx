@@ -3,6 +3,10 @@ import { InfiniteProductGrid } from '@/components/commerce/infinite-product-grid
 import { SearchProductsQuery } from '@/lib/vendure/queries';
 import { getRouteLocale } from '@/i18n/server';
 import { getTranslations } from 'next-intl/server';
+import {
+    getWishlistVariantMap,
+    isAuthenticatedCustomer,
+} from '@/lib/vendure/wishlist-server';
 
 interface ProductGridProps {
     productDataPromise: Promise<{
@@ -15,7 +19,11 @@ interface ProductGridProps {
 export async function ProductGrid({ productDataPromise, collectionSlug }: ProductGridProps) {
     const locale = await getRouteLocale();
     const t = await getTranslations({ locale, namespace: 'Product' });
-    const result = await productDataPromise;
+    const [result, wishlistByVariantId, isAuthenticated] = await Promise.all([
+        productDataPromise,
+        getWishlistVariantMap(),
+        isAuthenticatedCustomer(),
+    ]);
 
     const searchResult = result.data.search;
 
@@ -32,6 +40,8 @@ export async function ProductGrid({ productDataPromise, collectionSlug }: Produc
             initialItems={searchResult.items}
             totalItems={searchResult.totalItems}
             collectionSlug={collectionSlug}
+            wishlistByVariantId={wishlistByVariantId}
+            isAuthenticated={isAuthenticated}
         />
     );
 }

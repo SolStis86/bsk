@@ -15,6 +15,7 @@ const TAG_RULES: ReadonlyArray<{match: string | RegExp; kind: TagKind}> = [
     {match: /^footer$/, kind: 'locale-only'},
     {match: /^navbar-collections$/, kind: 'locale-only'},
     {match: /^mobile-nav$/, kind: 'locale-only'},
+    {match: 'wishlist', kind: 'locale-only'},
     {match: /^product-.+$/, kind: 'currency-dependent'},
     {match: /^collection-.+$/, kind: 'currency-dependent'},
     {match: /^related-products-.+$/, kind: 'currency-dependent'},

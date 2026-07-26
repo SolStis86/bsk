@@ -4,7 +4,7 @@ import {mutate} from '@/lib/vendure/api';
 import {LoginMutation, LogoutMutation} from '@/lib/vendure/mutations';
 import {removeAuthToken, setAuthToken} from '@/lib/auth';
 import {redirect} from '@/i18n/navigation';
-import {revalidatePath} from "next/cache";
+import {revalidatePath, updateTag} from "next/cache";
 import {getLocale, getTranslations} from 'next-intl/server';
 
 export async function loginAction(prevState: { error?: string } | undefined, formData: FormData) {
@@ -32,6 +32,8 @@ export async function loginAction(prevState: { error?: string } | undefined, for
         await setAuthToken(result.token);
     }
 
+    updateTag('wishlist');
+
     const locale = await getLocale();
     revalidatePath(`/${locale}`, 'layout');
 
@@ -47,6 +49,7 @@ export async function loginAction(prevState: { error?: string } | undefined, for
 export async function logoutAction() {
     await mutate(LogoutMutation);
     await removeAuthToken();
+    updateTag('wishlist');
 
     const locale = await getLocale();
     redirect({href: '/', locale})

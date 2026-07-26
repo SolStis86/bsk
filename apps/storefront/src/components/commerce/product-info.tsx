@@ -12,6 +12,7 @@ import {addToCart} from '@/app/[locale]/product/[slug]/actions';
 import {toast} from 'sonner';
 import {Price} from '@/components/commerce/price';
 import {ProductSpecs} from '@/components/commerce/product-specs';
+import {WishlistButton} from '@/components/commerce/wishlist-button';
 import {useTranslations} from 'next-intl';
 
 interface ProductFacetValue {
@@ -67,9 +68,12 @@ interface ProductInfoProps {
     };
     searchParams: { [key: string]: string | string[] | undefined };
     currencyCode: string;
+    productSlug: string;
+    isAuthenticated: boolean;
+    wishlistItemIdByVariantId: Record<string, string>;
 }
 
-export function ProductInfo({product, searchParams, currencyCode}: ProductInfoProps) {
+export function ProductInfo({product, searchParams, currencyCode, productSlug, isAuthenticated, wishlistItemIdByVariantId}: ProductInfoProps) {
     const t = useTranslations('Product');
     const pathname = usePathname();
     const router = useRouter();
@@ -162,7 +166,20 @@ export function ProductInfo({product, searchParams, currencyCode}: ProductInfoPr
         <div className="space-y-6">
             {/* Product Title & Price */}
             <div className="space-y-2">
-                <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{product.name}</h1>
+                <div className="flex items-start justify-between gap-4">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{product.name}</h1>
+                    <WishlistButton
+                        variantId={selectedVariant?.id ?? null}
+                        wishlistItemId={
+                            selectedVariant
+                                ? wishlistItemIdByVariantId[selectedVariant.id] ?? null
+                                : null
+                        }
+                        productSlug={productSlug}
+                        isAuthenticated={isAuthenticated}
+                        className="mt-1"
+                    />
+                </div>
                 {selectedVariant && (
                     <p className="text-2xl md:text-3xl text-muted-foreground font-semibold mt-3">
                         <Price value={selectedVariant.priceWithTax} currencyCode={currencyCode}/>

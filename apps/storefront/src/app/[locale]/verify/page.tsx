@@ -1,5 +1,6 @@
 import type {Metadata} from 'next';
 import {Suspense} from 'react';
+import {connection} from 'next/server';
 import {Card, CardContent} from '@/components/ui/card';
 import {Button} from '@/components/ui/button';
 import {Link} from '@/i18n/navigation';
@@ -18,6 +19,7 @@ async function VerifyPageContent({
 }: {
     searchParams: Promise<{ token?: string }>;
 }) {
+    await connection();
     const t = await getTranslations('Verify');
     const params = await searchParams;
     const token = params.token;

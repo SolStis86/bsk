@@ -6,7 +6,7 @@ import {NavbarNavLinks} from '@/components/layout/navbar/navbar-nav-links';
 import {NavbarCart} from '@/components/layout/navbar/navbar-cart';
 import {NavbarAccountIcon} from '@/components/layout/navbar/navbar-account-icon';
 import {NavbarSearchIcon} from '@/components/layout/navbar/navbar-search-icon';
-import {NavbarWishlistIcon} from '@/components/layout/navbar/navbar-wishlist-icon';
+import {NavbarWishlist} from '@/components/layout/navbar/navbar-wishlist';
 import {MobileNavWrapper} from '@/components/layout/navbar/mobile-nav-wrapper';
 import {NavbarUserSkeleton} from '@/components/shared/skeletons/navbar-user-skeleton';
 
@@ -44,7 +44,9 @@ export function Navbar() {
                             <Suspense fallback={<NavbarUserSkeleton />}>
                                 <NavbarAccountIcon />
                             </Suspense>
-                            <NavbarWishlistIcon />
+                            <Suspense fallback={null}>
+                                <NavbarWishlist />
+                            </Suspense>
                             <Suspense>
                                 <NavbarCart />
                             </Suspense>

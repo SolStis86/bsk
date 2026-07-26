@@ -151,7 +151,7 @@ export function MobileNav({navLinks, preferences}: MobileNavProps) {
                             <SheetClose
                                 render={
                                     <Link
-                                        href="/search"
+                                        href="/account/wishlist"
                                         className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-md hover:bg-accent transition-colors"
                                     />
                                 }

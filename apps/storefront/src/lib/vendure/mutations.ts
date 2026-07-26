@@ -1,4 +1,5 @@
 import { graphql } from '@/graphql';
+import { WishlistItemFragment } from './fragments';
 
 export const LoginMutation = graphql(`
     mutation Login($username: String!, $password: String!) {
@@ -453,3 +454,19 @@ export const SetCustomerForOrderMutation = graphql(`
         }
     }
 `);
+
+export const AddToWishlistMutation = graphql(`
+    mutation AddToWishlist($productVariantId: ID!) {
+        addToWishlist(productVariantId: $productVariantId) {
+            ...WishlistItem
+        }
+    }
+`, [WishlistItemFragment]);
+
+export const RemoveFromWishlistMutation = graphql(`
+    mutation RemoveFromWishlist($itemId: ID!) {
+        removeFromWishlist(itemId: $itemId) {
+            ...WishlistItem
+        }
+    }
+`, [WishlistItemFragment]);
