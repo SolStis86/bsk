@@ -7,7 +7,7 @@ COPY package.json package-lock.json ./
 COPY apps/server/package.json apps/server/
 COPY apps/storefront/package.json apps/storefront/
 
-RUN npm ci --workspace=server --include-workspace-root
+RUN npm ci --include-workspace-root
 
 COPY apps/server apps/server
 
