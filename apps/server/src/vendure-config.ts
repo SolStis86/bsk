@@ -53,7 +53,8 @@ export const config: VendureConfig = {
         type: 'postgres',
         // See the README.md "Migrations" section for an explanation of
         // the `synchronize` and `migrations` options.
-        synchronize: false,
+        // DB_SYNCHRONIZE=true is for one-time bootstrap of an empty database only.
+        synchronize: process.env.DB_SYNCHRONIZE === 'true',
         migrations: [path.join(__dirname, './migrations/*.+(js|ts)')],
         logging: false,
         database: process.env.DB_NAME,
@@ -107,7 +108,7 @@ export const config: VendureConfig = {
                 'https://www.1on1wholesale.co.uk/API/product/export/?type=1',
             imageZipUrl:
                 process.env.PRODUCT_FEED_IMAGE_ZIP_URL ??
-                'https://www.1on1wholesale.co.uk/API/product/export/images/images.zip',
+                'https://www.1on1wholesale.co.uk/API/product/export/images/allimages.zip',
             importCron: process.env.PRODUCT_FEED_CRON ?? '0 2 * * *',
             disableMissingFromFeed: true,
             devImportLimit: +(process.env.PRODUCT_FEED_DEV_IMPORT_LIMIT ?? 0),
