@@ -44,12 +44,13 @@ services:
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       PORT: ${VENDURE_PORT}
+      ASSET_UPLOAD_DIR: /var/lib/vendure/assets
       VENDURE_PUBLIC_URL: https://api.${ENV_LABEL}${ROOT_DOMAIN}
       STOREFRONT_URL: https://${ENV_LABEL}${ROOT_DOMAIN}
     ports:
       - '${VENDURE_HOST_PORT}:${VENDURE_PORT}'
     volumes:
-      - vendure_assets:/app/apps/server/static/assets
+      - vendure_assets:/var/lib/vendure/assets
 
   vendure-worker:
     image: ${GHCR_IMAGE_VENDURE}:${IMAGE_TAG}
@@ -61,10 +62,11 @@ services:
       APP_ENV: ${APP_ENV}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
+      ASSET_UPLOAD_DIR: /var/lib/vendure/assets
       VENDURE_PUBLIC_URL: https://api.${ENV_LABEL}${ROOT_DOMAIN}
       STOREFRONT_URL: https://${ENV_LABEL}${ROOT_DOMAIN}
     volumes:
-      - vendure_assets:/app/apps/server/static/assets
+      - vendure_assets:/var/lib/vendure/assets
 
   storefront:
     image: ${GHCR_IMAGE_STOREFRONT}:${IMAGE_TAG}

@@ -50,9 +50,10 @@ Either:
 
 ## Asset volume permissions
 
-The Vendure asset volume must be writable so the server can create `assets/cache/`. The
-Docker image entrypoint fixes ownership on each startup. If you still see
-`EACCES … mkdir …/assets/cache`, recreate the stack with the latest server image.
+Uploaded product images are stored in the `vendure_assets` volume at
+`/var/lib/vendure/assets` inside the container (configured via `ASSET_UPLOAD_DIR`).
+The image pre-creates this directory owned by the non-root `vendure` user — no
+entrypoint or root privileges required at runtime.
 
 ## Why not leave synchronize enabled?
 
