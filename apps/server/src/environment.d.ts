@@ -28,6 +28,7 @@ declare global {
             STOREFRONT_URL?: string;
             STOREFRONT_DEFAULT_LOCALE?: string;
             REVALIDATION_SECRET?: string;
+            VENDURE_PUBLIC_URL?: string;
         }
     }
 }

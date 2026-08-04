@@ -1,0 +1,16 @@
+.git
+.github
+.cursor
+**/node_modules
+**/.next
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+**/coverage
+**/*.spec.ts
+**/*.e2e-spec.ts
+design
+plans
+*.md
+!apps/server/static/**
