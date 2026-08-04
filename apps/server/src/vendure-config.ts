@@ -53,8 +53,7 @@ export const config: VendureConfig = {
         type: 'postgres',
         // See the README.md "Migrations" section for an explanation of
         // the `synchronize` and `migrations` options.
-        // DB_SYNCHRONIZE=true is for one-time bootstrap of an empty database only.
-        synchronize: process.env.DB_SYNCHRONIZE === 'true',
+        synchronize: false,
         migrations: [path.join(__dirname, './migrations/*.+(js|ts)')],
         logging: false,
         database: process.env.DB_NAME,

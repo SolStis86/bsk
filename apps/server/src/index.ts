@@ -10,7 +10,11 @@ async function start() {
             'DB_SYNCHRONIZE=true: creating schema on empty database and stamping existing migrations…',
         );
         await synchronizeSchemaAndStampMigrations(config);
-    } else if (!(await productTableExists(config))) {
+        await bootstrap(config);
+        return;
+    }
+
+    if (!(await productTableExists(config))) {
         console.error(
             [
                 'Database has no Vendure schema (relation "product" does not exist).',

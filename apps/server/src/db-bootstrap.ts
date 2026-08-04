@@ -1,5 +1,6 @@
 import { readdirSync } from 'fs';
 import path from 'path';
+import { preBootstrapConfig } from '@vendure/core';
 import { createConnection } from 'typeorm';
 import { camelCase } from 'typeorm/util/StringUtils';
 import type { VendureConfig } from '@vendure/core';
@@ -27,15 +28,17 @@ async function ensureMigrationsTable(query: (sql: string, params?: unknown[]) =>
 }
 
 export async function productTableExists(config: VendureConfig): Promise<boolean> {
+    const resolvedConfig = await preBootstrapConfig(config);
     const connection = await createConnection({
-        ...config.dbConnectionOptions,
+        ...resolvedConfig.dbConnectionOptions,
         synchronize: false,
         migrationsRun: false,
+        logging: false,
     });
     try {
         const schema =
-            'schema' in config.dbConnectionOptions && config.dbConnectionOptions.schema
-                ? config.dbConnectionOptions.schema
+            'schema' in resolvedConfig.dbConnectionOptions && resolvedConfig.dbConnectionOptions.schema
+                ? resolvedConfig.dbConnectionOptions.schema
                 : 'public';
         const result = await connection.query(`SELECT to_regclass($1) IS NOT NULL AS "exists"`, [
             `${schema}.product`,
@@ -47,15 +50,17 @@ export async function productTableExists(config: VendureConfig): Promise<boolean
 }
 
 /**
- * Creates the full schema from entity metadata (synchronize) and records all
+ * Creates the full schema from Vendure entity metadata (synchronize) and records all
  * bundled migrations as already applied. Used once for an empty database when
  * no initial-schema migration is present in the repo.
  */
 export async function synchronizeSchemaAndStampMigrations(config: VendureConfig): Promise<void> {
+    const resolvedConfig = await preBootstrapConfig(config);
     const connection = await createConnection({
-        ...config.dbConnectionOptions,
+        ...resolvedConfig.dbConnectionOptions,
         synchronize: true,
         migrationsRun: false,
+        logging: false,
     });
 
     try {
@@ -80,6 +85,20 @@ export async function synchronizeSchemaAndStampMigrations(config: VendureConfig)
             ]);
             console.log(`Stamped migration: ${migration.name}`);
         }
+
+        const schema =
+            'schema' in resolvedConfig.dbConnectionOptions && resolvedConfig.dbConnectionOptions.schema
+                ? resolvedConfig.dbConnectionOptions.schema
+                : 'public';
+        const result = await connection.query(`SELECT to_regclass($1) IS NOT NULL AS "exists"`, [
+            `${schema}.product`,
+        ]);
+        if (!result[0]?.exists) {
+            throw new Error(
+                'Schema synchronization completed but core tables were not created. Check database connectivity and permissions.',
+            );
+        }
+        console.log('Database schema synchronized successfully.');
     } finally {
         await connection.close();
     }

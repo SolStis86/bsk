@@ -38,14 +38,18 @@ COPY --from=builder /app/node_modules /app/node_modules
 COPY --from=builder /app/apps/server/package.json ./
 COPY --from=builder /app/apps/server/dist ./dist
 COPY --from=builder /app/apps/server/static ./static
+COPY apps/server/docker-entrypoint.sh /docker-entrypoint.sh
 
-RUN chown -R vendure:vendure /app
+RUN chmod +x /docker-entrypoint.sh \
+    && mkdir -p static/assets/cache \
+    && chown -R vendure:vendure /app
 
-USER vendure
+USER root
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider "http://127.0.0.1:${PORT:-3000}/health" || exit 1
 
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["node", "./dist/index.js"]

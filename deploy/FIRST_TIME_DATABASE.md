@@ -32,10 +32,27 @@ Migration "ProductFeedCustomFields1784905397470" failed: relation "product" does
    docker compose up -d vendure-server
    ```
 
-4. Confirm logs show schema creation and `Stamped migration: …` lines, then remove
-   `DB_SYNCHRONIZE=true` from `.env` and restart the stack.
+4. Confirm logs show `Database schema synchronized successfully.` and `Stamped migration: …`
+   lines, then remove `DB_SYNCHRONIZE=true` from `.env` and restart the stack.
 
 5. Leave `DB_SYNCHRONIZE` unset (or `false`) for all normal operation.
+
+## If bootstrap failed partway through
+
+A failed `DB_SYNCHRONIZE` run may stamp migrations without creating tables (older images).
+Either:
+
+- **Reset the database** (safest): drop/recreate `bsk_dev`, keep `DB_SYNCHRONIZE=true`, pull
+  the latest `dev` image, and restart; or
+- **Retry on the same database** with a fixed image: leave `DB_SYNCHRONIZE=true`, restart
+  `vendure-server` — synchronize will create missing tables and skip already-stamped
+  migrations.
+
+## Asset volume permissions
+
+The Vendure asset volume must be writable so the server can create `assets/cache/`. The
+Docker image entrypoint fixes ownership on each startup. If you still see
+`EACCES … mkdir …/assets/cache`, recreate the stack with the latest server image.
 
 ## Why not leave synchronize enabled?
 
