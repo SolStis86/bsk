@@ -5,6 +5,7 @@ import { RawFeedRow } from '../types/feed.types';
 import {
     filenameFromUrl,
     inferOptionValues,
+    parseAllImageFilenames,
     parseCategoryTags,
     parseImageFilenames,
     parseImageUrls,
@@ -79,6 +80,18 @@ describe('feed-mapper.utils', () => {
             makeRow({
                 allImages:
                     'https://example.com/path/photo-a.jpg|https://example.com/photo-b.jpg',
+            }),
+        );
+        expect(filenames).toEqual(['photo-a.jpg', 'photo-b.jpg']);
+    });
+
+    it('parseAllImageFilenames ignores ViewImageURL and ImageName', () => {
+        const filenames = parseAllImageFilenames(
+            makeRow({
+                allImages:
+                    'https://example.com/path/photo-a.jpg|https://example.com/photo-b.jpg',
+                viewImageUrl: 'https://example.com/view-only.jpg',
+                imageName: 'ignored.jpg',
             }),
         );
         expect(filenames).toEqual(['photo-a.jpg', 'photo-b.jpg']);

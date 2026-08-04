@@ -14,6 +14,20 @@ import {
 
 const TERMINAL_STAGES = [ProductFeedImportStage.COMPLETE, ProductFeedImportStage.FAILED];
 
+/** Stages where the catalog sync loop may still enqueue asset jobs. */
+const CATALOG_SYNC_IN_PROGRESS_STAGES = [
+    ProductFeedImportStage.QUEUED,
+    ProductFeedImportStage.DOWNLOADING_FEED,
+    ProductFeedImportStage.PREPARING_IMAGES,
+    ProductFeedImportStage.PARSING_FEED,
+    ProductFeedImportStage.SYNCING_PRODUCTS,
+    ProductFeedImportStage.DISABLING_MISSING,
+];
+
+export function isAssetZipStillRequired(stage: string): boolean {
+    return CATALOG_SYNC_IN_PROGRESS_STAGES.includes(stage as ProductFeedImportStage);
+}
+
 @Injectable()
 export class ProductFeedImportProgressService {
     constructor(private connection: TransactionalConnection) {}
@@ -57,16 +71,38 @@ export class ProductFeedImportProgressService {
         await this.save(ctx, jobId, { assetsPending });
     }
 
-    async decrementAssetsPending(ctx: RequestContext, jobId: string): Promise<number> {
+    async incrementAssetsPending(ctx: RequestContext, jobId: string): Promise<number> {
         const repo = this.connection.getRepository(ctx, ProductFeedImportProgressRecord);
-        const record = await repo.findOne({ where: { jobId } });
-        if (!record) {
+        const updated = await repo.increment({ jobId }, 'assetsPending', 1);
+        if (!updated.affected) {
             return 0;
         }
 
-        const assetsPending = Math.max(0, (record.assetsPending ?? 0) - 1);
-        await repo.save({ ...record, assetsPending });
-        return assetsPending;
+        const record = await repo.findOne({ where: { jobId } });
+        return record?.assetsPending ?? 0;
+    }
+
+    async saveResult(
+        ctx: RequestContext,
+        jobId: string,
+        result: ProductFeedImportResult,
+    ): Promise<void> {
+        await this.save(ctx, jobId, { result });
+    }
+
+    async decrementAssetsPending(ctx: RequestContext, jobId: string): Promise<number> {
+        const repo = this.connection.getRepository(ctx, ProductFeedImportProgressRecord);
+
+        await repo
+            .createQueryBuilder()
+            .update(ProductFeedImportProgressRecord)
+            .set({ assetsPending: () => 'GREATEST(0, "assetsPending" - 1)' })
+            .where('jobId = :jobId', { jobId })
+            .andWhere('"assetsPending" > 0')
+            .execute();
+
+        const record = await repo.findOne({ where: { jobId } });
+        return record?.assetsPending ?? 0;
     }
 
     async complete(ctx: RequestContext, jobId: string, result: ProductFeedImportResult): Promise<void> {

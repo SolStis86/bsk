@@ -9,7 +9,7 @@ import {
 } from '../types/asset-import.types';
 import { CatalogSyncResult } from '../types/import.types';
 import { AssetImportService } from './asset-import.service';
-import { ProductFeedImportProgressService } from './product-feed-import-progress.service';
+import { ProductFeedAssetImportProgressSyncService } from './product-feed-asset-import-progress-sync.service';
 
 type AssetImportJobPayload = {
     productId: string;
@@ -36,7 +36,7 @@ export class ProductFeedAssetImportService implements OnModuleInit {
     constructor(
         private jobQueueService: JobQueueService,
         private assetImportService: AssetImportService,
-        private progressService: ProductFeedImportProgressService,
+        private progressSyncService: ProductFeedAssetImportProgressSyncService,
     ) {}
 
     async onModuleInit(): Promise<void> {
@@ -75,23 +75,17 @@ export class ProductFeedAssetImportService implements OnModuleInit {
     ): Promise<{ assetsImported: number; warnings: string[] }> {
         const ctx = RequestContext.deserialize(job.data.ctx);
         const { importJobId, payload } = job.data;
-        const archive = await this.assetImportService.openArchiveForImport(importJobId);
+
+        await this.assetImportService.activateImportSessionForWorker(importJobId);
 
         try {
-            const result = await this.assetImportService.importFromPayload(
+            return await this.assetImportService.importFromPayload(
                 ctx,
                 payload as ProductAssetImportPayload,
-                archive,
             );
-            const assetsPending = await this.progressService.decrementAssetsPending(ctx, importJobId);
-
-            if (assetsPending === 0) {
-                await this.assetImportService.cleanupImportSession(importJobId);
-            }
-
-            return result;
         } finally {
-            await archive?.close();
+            await this.assetImportService.deactivateAssetSession();
+            await this.progressSyncService.syncAssetImportProgress(ctx, importJobId);
         }
     }
 

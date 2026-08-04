@@ -9,6 +9,7 @@ import {
 
 import { loggerCtx } from '../constants';
 import {
+    PARENT_COLLECTION_HOMEPAGE_DEFAULTS,
     PARENT_COLLECTION_NAV_DEFAULTS,
     PRODUCT_FEED_FACETS,
 } from '../constants/taxonomy.constants';
@@ -62,6 +63,7 @@ export class TaxonomySeedService implements OnApplicationBootstrap {
         );
 
         await this.bootstrapCollectionNavDefaults(ctx);
+        await this.bootstrapCollectionHomepageDefaults(ctx);
     }
 
     /**
@@ -99,6 +101,43 @@ export class TaxonomySeedService implements OnApplicationBootstrap {
 
         if (updated > 0) {
             this.logger.log(`Applied collection nav defaults to ${updated} top-level collections`);
+        }
+    }
+
+    /**
+     * One-time bootstrap for existing collections: if no top-level collection is
+     * marked for the homepage grid yet, apply defaults from PARENT_COLLECTION_HOMEPAGE_DEFAULTS.
+     */
+    private async bootstrapCollectionHomepageDefaults(ctx: Awaited<ReturnType<RequestContextService['create']>>): Promise<void> {
+        const { items } = await this.collectionService.findAll(ctx, {
+            topLevelOnly: true,
+            take: 100,
+        });
+
+        if (items.some(collection => collection.customFields?.showOnHomepage === true)) {
+            return;
+        }
+
+        let updated = 0;
+
+        for (const collection of items) {
+            const defaults = PARENT_COLLECTION_HOMEPAGE_DEFAULTS[collection.slug];
+            if (!defaults) {
+                continue;
+            }
+
+            await this.collectionService.update(ctx, {
+                id: collection.id,
+                customFields: {
+                    showOnHomepage: defaults.showOnHomepage,
+                    homepageSortOrder: defaults.homepageSortOrder,
+                },
+            });
+            updated++;
+        }
+
+        if (updated > 0) {
+            this.logger.log(`Applied collection homepage defaults to ${updated} top-level collections`);
         }
     }
 }

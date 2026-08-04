@@ -45,12 +45,14 @@ services:
       DB_PORT: ${DB_PORT}
       PORT: ${VENDURE_PORT}
       ASSET_UPLOAD_DIR: /var/lib/vendure/assets
+      PRODUCT_FEED_IMPORT_SESSION_DIR: /var/lib/vendure/import-sessions
       VENDURE_PUBLIC_URL: https://api.${ENV_LABEL}${ROOT_DOMAIN}
       STOREFRONT_URL: https://${ENV_LABEL}${ROOT_DOMAIN}
     ports:
       - '${VENDURE_HOST_PORT}:${VENDURE_PORT}'
     volumes:
       - vendure_assets:/var/lib/vendure/assets
+      - vendure_import_sessions:/var/lib/vendure/import-sessions
 
   vendure-worker:
     image: ${GHCR_IMAGE_VENDURE}:${IMAGE_TAG}
@@ -63,10 +65,12 @@ services:
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       ASSET_UPLOAD_DIR: /var/lib/vendure/assets
+      PRODUCT_FEED_IMPORT_SESSION_DIR: /var/lib/vendure/import-sessions
       VENDURE_PUBLIC_URL: https://api.${ENV_LABEL}${ROOT_DOMAIN}
       STOREFRONT_URL: https://${ENV_LABEL}${ROOT_DOMAIN}
     volumes:
       - vendure_assets:/var/lib/vendure/assets
+      - vendure_import_sessions:/var/lib/vendure/import-sessions
     # Worker process has no HTTP server; disable the /health check baked into the server image.
     healthcheck:
       disable: true
@@ -89,3 +93,5 @@ volumes:
     name: bsk_${STACK_ENV}_postgres_data
   vendure_assets:
     name: bsk_${STACK_ENV}_vendure_assets
+  vendure_import_sessions:
+    name: bsk_${STACK_ENV}_vendure_import_sessions

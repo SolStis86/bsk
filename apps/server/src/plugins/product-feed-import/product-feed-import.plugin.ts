@@ -9,10 +9,14 @@ import { CatalogSyncService } from './services/catalog-sync.service';
 import { CategoryAvailabilityService } from './services/category-availability.service';
 import { FeedMapperService } from './services/feed-mapper.service';
 import { FeedParserService } from './services/feed-parser.service';
+import { ProductFeedAssetImportProgressSyncService } from './services/product-feed-asset-import-progress-sync.service';
 import { ProductFeedAssetImportService } from './services/product-feed-asset-import.service';
+import { ProductFeedImportAssetSessionService } from './services/product-feed-import-asset-session.service';
 import { ProductFeedImportEventHandler } from './services/product-feed-import-event-handler.service';
+import { ProductFeedImportFinalizationService } from './services/product-feed-import-finalization.service';
 import { ProductFeedImportProgressService } from './services/product-feed-import-progress.service';
 import { ProductFeedImportService } from './services/product-feed-import.service';
+import { ProductFeedImportSideEffectBufferService } from './services/product-feed-import-side-effect-buffer.service';
 import { StorefrontRevalidationService } from './services/storefront-revalidation.service';
 import { TaxonomySeedService } from './services/taxonomy-seed.service';
 import { TaxonomySyncService } from './services/taxonomy-sync.service';
@@ -21,6 +25,9 @@ import {
     createProductFeedImportTask,
 } from './tasks/product-feed-import.task';
 import { PluginInitOptions } from './types';
+import { ProductFeedZipAssetImportStrategy } from './strategies/product-feed-zip-asset-import.strategy';
+
+const productFeedZipAssetImportStrategy = new ProductFeedZipAssetImportStrategy();
 
 @VendurePlugin({
     imports: [PluginCommonModule],
@@ -34,8 +41,12 @@ import { PluginInitOptions } from './types';
         CategoryAvailabilityService,
         CatalogSyncService,
         AssetImportService,
+        ProductFeedImportAssetSessionService,
         ProductFeedAssetImportService,
+        ProductFeedAssetImportProgressSyncService,
         ProductFeedImportProgressService,
+        ProductFeedImportSideEffectBufferService,
+        ProductFeedImportFinalizationService,
         ProductFeedImportService,
         StorefrontRevalidationService,
         ProductFeedImportEventHandler,
@@ -46,6 +57,10 @@ import { PluginInitOptions } from './types';
     },
     dashboard: './dashboard/index.tsx',
     configuration: config => {
+        config.importExportOptions = {
+            ...config.importExportOptions,
+            assetImportStrategy: productFeedZipAssetImportStrategy,
+        };
         config.schedulerOptions.tasks = config.schedulerOptions.tasks ?? [];
         config.schedulerOptions.tasks.push(
             createProductFeedImportTask(ProductFeedImportPlugin.options),

@@ -125,6 +125,32 @@ export const productFeedCustomFields: CustomFields = {
                 },
             ],
         },
+        {
+            name: 'showOnHomepage',
+            type: 'boolean',
+            defaultValue: false,
+            public: true,
+            label: [{ languageCode: LanguageCode.en, value: 'Show on homepage' }],
+            description: [
+                {
+                    languageCode: LanguageCode.en,
+                    value: 'Display this collection in the category grid below the homepage hero.',
+                },
+            ],
+        },
+        {
+            name: 'homepageSortOrder',
+            type: 'int',
+            defaultValue: 0,
+            public: true,
+            label: [{ languageCode: LanguageCode.en, value: 'Homepage sort order' }],
+            description: [
+                {
+                    languageCode: LanguageCode.en,
+                    value: 'Lower numbers appear first in the homepage category grid.',
+                },
+            ],
+        },
     ],
     GlobalSettings: [
         {

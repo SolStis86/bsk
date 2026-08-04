@@ -6,6 +6,8 @@ import {
     CategoryAvailabilityService,
     CategoryAvailabilityUpdateResult,
 } from '../services/category-availability.service';
+import { ProductFeedAssetImportService } from '../services/product-feed-asset-import.service';
+import { ProductFeedAssetImportProgressSyncService } from '../services/product-feed-asset-import-progress-sync.service';
 import { ProductFeedImportProgressService } from '../services/product-feed-import-progress.service';
 import { ProductFeedImportService } from '../services/product-feed-import.service';
 import {
@@ -20,6 +22,7 @@ export class ProductFeedImportAdminResolver {
         private productFeedImportService: ProductFeedImportService,
         private categoryAvailabilityService: CategoryAvailabilityService,
         private progressService: ProductFeedImportProgressService,
+        private assetProgressSyncService: ProductFeedAssetImportProgressSyncService,
     ) {}
 
     @Query()
@@ -34,6 +37,7 @@ export class ProductFeedImportAdminResolver {
         @Ctx() ctx: RequestContext,
         @Args() args: { jobId: string },
     ): Promise<ProductFeedImportProgress | null> {
+        await this.assetProgressSyncService.syncAssetImportProgress(ctx, args.jobId);
         return this.progressService.get(ctx, args.jobId);
     }
 

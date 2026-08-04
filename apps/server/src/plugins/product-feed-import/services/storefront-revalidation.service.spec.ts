@@ -29,6 +29,7 @@ describe('StorefrontRevalidationService', () => {
             'collections',
             'navbar-collections',
             'mobile-nav',
+            'homepage-categories',
             'featured',
             'products',
         ]);

@@ -11,6 +11,7 @@ import {
     addToWishlist,
     removeFromWishlist,
 } from '@/app/[locale]/account/(protected)/wishlist/actions';
+import { emitWishlistCountChange } from '@/lib/wishlist-client';
 
 interface WishlistButtonProps {
     variantId: string | null;
@@ -49,9 +50,10 @@ export function WishlistButton({
 
         startTransition(async () => {
             if (wishlistItemId) {
-                const result = await removeFromWishlist(wishlistItemId);
+                const result = await removeFromWishlist(wishlistItemId, { revalidateCache: false });
                 if (result.success) {
                     setWishlistItemId(null);
+                    emitWishlistCountChange(-1);
                     toast.success(t('removed'));
                 } else {
                     toast.error(t('errorTitle'), { description: result.error });
@@ -59,11 +61,11 @@ export function WishlistButton({
                 return;
             }
 
-            const result = await addToWishlist(variantId);
+            const result = await addToWishlist(variantId, { revalidateCache: false });
             if (result.success) {
                 setWishlistItemId(result.itemId ?? variantId);
+                emitWishlistCountChange(1);
                 toast.success(t('added'));
-                router.refresh();
             } else {
                 toast.error(t('errorTitle'), { description: result.error });
             }

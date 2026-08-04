@@ -9,7 +9,7 @@ Set via `ProductFeedImportPlugin.init()` in `vendure-config.ts` (not `process.en
 | Option | Description |
 |--------|-------------|
 | `feedUrl` | Remote CSV export URL |
-| `imageZipUrl` | Remote zip of all product images (filenames match feed `AllImages` / `ImageName`) |
+| `imageZipUrl` | Remote zip of **all** product gallery images. Use `…/images/allimages.zip` (not `images.zip`, which only contains primary `-1` shots). Filenames are taken from the feed `AllImages` pipe-separated URLs. |
 | `importCron` | Cron schedule for overnight sync (`DefaultSchedulerPlugin`) |
 | `disableMissingFromFeed` | Disable feed-managed SKUs absent from a **full** successful import |
 | `devImportLimit` | Default import cap when mutation/CLI omit `importLimit` (`0` = no limit) |
@@ -47,7 +47,13 @@ Environment variables (read in `vendure-config.ts` only):
 
 The dashboard import page polls progress automatically. Imports run as a background job — ensure the **worker** is running (`npm run dev` starts server + worker + dashboard).
 
-Re-import is safe — upserts by `sourceProductCode` / variant SKU. Product images are loaded from the wholesale image zip (one download per import run into a temp dir keyed by job id). Asset imports run on a separate retryable queue when `assetQueueEnabled` is true. Individual feed URLs are used only as fallback when a file is missing from the zip. A search reindex job is queued automatically when products are created or updated. After a successful import, the plugin POSTs to the storefront `/api/revalidate` endpoint to refresh cached catalog pages.
+Re-import is safe — upserts by `sourceProductCode` / variant SKU. Product images are loaded from the wholesale **allimages** zip (one download per import run into a shared session dir keyed by job id). The feed `AllImages` column is a pipe-separated list of image URLs; the importer strips the URL path and looks up each basename in the zip (e.g. `photo-a.jpg|photo-b.jpg` → two assets). Asset imports run on a separate retryable queue when `assetQueueEnabled` is true. Assets are resolved through Vendure's `AssetImporter` and a zip-backed `AssetImportStrategy` — feed image URLs are not fetched individually when `imageZipUrl` is configured. Missing zip entries are logged as warnings and skipped.
+
+**Docker deployment:** when `vendure-server` and `vendure-worker` run in separate containers, mount the same volume at `/var/lib/vendure/import-sessions` on both and set `PRODUCT_FEED_IMPORT_SESSION_DIR=/var/lib/vendure/import-sessions` (see `deploy/docker-compose.yml`). Without this, the server downloads the zip but asset jobs on the worker fail with `ENOENT` on the zip path.
+
+During catalog sync, per-product `apply-collection-filters` and `update-search-index` jobs are suppressed. After sync, a single collection-filter job runs for all collections. Search reindex is queued once after asset imports finish (or immediately when no assets are deferred). After a successful import, the plugin POSTs to the storefront `/api/revalidate` endpoint to refresh cached catalog pages.
+
+When `imageZipUrl` is not configured (local dev), the strategy falls back to Vendure's `DefaultAssetImportStrategy` for local `importAssetsDir` paths.
 
 HTML descriptions are sanitised on import. OOS products import as enabled with zero stock.
 

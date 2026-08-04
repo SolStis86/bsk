@@ -9,6 +9,7 @@ import { Price } from '@/components/commerce/price';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { removeFromWishlist } from '@/app/[locale]/account/(protected)/wishlist/actions';
+import { emitWishlistCountChange } from '@/lib/wishlist-client';
 import { addToCart } from '@/app/[locale]/product/[slug]/actions';
 import type { FragmentOf } from '@/graphql';
 import { readFragment } from '@/graphql';
@@ -41,9 +42,10 @@ export function WishlistItems({ items: itemsProp, currencyCode }: WishlistItemsP
 
     const handleRemove = (itemId: string) => {
         startTransition(async () => {
-            const result = await removeFromWishlist(itemId);
+            const result = await removeFromWishlist(itemId, { revalidateCache: false });
             if (result.success) {
                 setItems((current) => current.filter((item) => item.id !== itemId));
+                emitWishlistCountChange(-1);
                 toast.success(t('removed'));
             } else {
                 toast.error(t('errorTitle'), { description: result.error });

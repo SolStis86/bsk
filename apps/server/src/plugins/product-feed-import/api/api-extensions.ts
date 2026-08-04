@@ -10,6 +10,7 @@ export const adminApiExtensions = gql`
         DISABLING_MISSING
         ENQUEUING_ASSETS
         APPLYING_COLLECTIONS
+        IMPORTING_ASSETS
         REINDEXING_SEARCH
         COMPLETE
         FAILED

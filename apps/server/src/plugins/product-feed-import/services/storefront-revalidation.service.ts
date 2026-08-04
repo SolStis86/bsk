@@ -7,6 +7,7 @@ const REVALIDATION_TAGS = [
     'collections',
     'navbar-collections',
     'mobile-nav',
+    'homepage-categories',
     'featured',
     'products',
 ] as const;

@@ -2,16 +2,13 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { readFileSync } from 'fs';
 import {
     CollectionService,
-    EventBus,
     Job,
     JobQueue,
     JobQueueService,
     RequestContext,
-    SearchService,
 } from '@vendure/core';
 
 import { PRODUCT_FEED_IMPORT_PLUGIN_OPTIONS, PRODUCT_FEED_IMPORT_QUEUE_NAME, loggerCtx } from '../constants';
-import { ProductFeedImportCompletedEvent } from '../events/product-feed-import-completed.event';
 import { FeedWarning } from '../types/feed.types';
 import {
     emptyImportResult,
@@ -27,7 +24,10 @@ import { CatalogSyncService } from './catalog-sync.service';
 import { FeedMapperService } from './feed-mapper.service';
 import { FeedParserService } from './feed-parser.service';
 import { ProductFeedAssetImportService } from './product-feed-asset-import.service';
+import { ProductFeedAssetImportProgressSyncService } from './product-feed-asset-import-progress-sync.service';
+import { ProductFeedImportFinalizationService } from './product-feed-import-finalization.service';
 import { ProductFeedImportProgressService } from './product-feed-import-progress.service';
+import { ProductFeedImportSideEffectBufferService } from './product-feed-import-side-effect-buffer.service';
 import { TaxonomySyncService } from './taxonomy-sync.service';
 
 interface ProductFeedImportJobData {
@@ -48,12 +48,13 @@ export class ProductFeedImportService implements OnModuleInit {
         private catalogSyncService: CatalogSyncService,
         private assetImportService: AssetImportService,
         private assetQueueService: ProductFeedAssetImportService,
+        private assetProgressSyncService: ProductFeedAssetImportProgressSyncService,
         private taxonomySyncService: TaxonomySyncService,
         private collectionService: CollectionService,
-        private searchService: SearchService,
         private jobQueueService: JobQueueService,
         private progressService: ProductFeedImportProgressService,
-        private eventBus: EventBus,
+        private sideEffectBuffer: ProductFeedImportSideEffectBufferService,
+        private finalizationService: ProductFeedImportFinalizationService,
     ) {}
 
     async onModuleInit(): Promise<void> {
@@ -118,10 +119,12 @@ export class ProductFeedImportService implements OnModuleInit {
         const seenSkus = new Set<string>();
         const syncStartedAt = new Date();
         let isFullImport = true;
+        let assetsStillPending = false;
 
         this.taxonomySyncService.clearCaches();
         this.assetImportService.clearCache();
         this.collectionService.setApplyAllFiltersOnProductUpdates(false);
+        this.sideEffectBuffer.activate();
 
         try {
             if (!options.skipAssets) {
@@ -262,15 +265,15 @@ export class ProductFeedImportService implements OnModuleInit {
                 result.productsDisabled = disableResult.productsDisabled;
             }
 
-            if (deferAssets && importJobId && result.assetsEnqueued > 0) {
-                await this.progressService.setAssetsPending(ctx, importJobId, result.assetsEnqueued);
+            assetsStillPending = deferAssets && !!importJobId && result.assetsEnqueued > 0;
+
+            if (assetsStillPending) {
                 this.reportProgress(options.onProgress, {
                     stage: ProductFeedImportStage.ENQUEUING_ASSETS,
                     message: `Queued ${result.assetsEnqueued} asset import job(s)`,
                     progress: 86,
                     processedProducts: totalProducts,
                     totalProducts,
-                    assetsPending: result.assetsEnqueued,
                 });
             } else if (importJobId && result.assetsEnqueued === 0) {
                 await this.assetImportService.cleanupImportSession(importJobId);
@@ -282,12 +285,13 @@ export class ProductFeedImportService implements OnModuleInit {
                 progress: 90,
                 processedProducts: totalProducts,
                 totalProducts,
-                assetsPending: result.assetsEnqueued,
             });
 
+            await this.sideEffectBuffer.discardCollectionJobs();
             await this.collectionService.triggerApplyFiltersJob(ctx);
 
-            if (result.productsCreated + result.productsUpdated > 0) {
+            const shouldReindex = this.shouldReindexSearch(result);
+            if (shouldReindex && !assetsStillPending) {
                 this.reportProgress(options.onProgress, {
                     stage: ProductFeedImportStage.REINDEXING_SEARCH,
                     message: 'Queueing search reindex…',
@@ -296,11 +300,15 @@ export class ProductFeedImportService implements OnModuleInit {
                     totalProducts,
                     assetsPending: result.assetsEnqueued,
                 });
-                await this.reindexSearch(ctx);
+                await this.finalizationService.queueSearchReindex(ctx);
             }
         } finally {
-            await this.assetImportService.releaseArchive();
+            await this.assetImportService.deactivateAssetSession();
             this.collectionService.setApplyAllFiltersOnProductUpdates(true);
+            if (!assetsStillPending) {
+                await this.sideEffectBuffer.discardSearchJobs();
+                this.sideEffectBuffer.deactivate();
+            }
         }
 
         return result;
@@ -321,15 +329,39 @@ export class ProductFeedImportService implements OnModuleInit {
                     job.setProgress(update.progress);
                 },
             });
-            await this.progressService.complete(ctx, jobId, result);
-            await this.eventBus.publish(new ProductFeedImportCompletedEvent(ctx, jobId, result));
+
+            const pending = await this.assetProgressSyncService.countPendingAssetJobs(ctx, jobId);
+            await this.progressService.saveResult(ctx, jobId, result);
+            await this.progressService.setAssetsPending(ctx, jobId, pending);
+
+            if (pending > 0) {
+                await this.progressService.update(ctx, jobId, {
+                    stage: ProductFeedImportStage.IMPORTING_ASSETS,
+                    message: `Importing assets (${pending} remaining)…`,
+                    progress: 92,
+                });
+                return result;
+            }
+
+            await this.finalizationService.finalizeImport(ctx, jobId, result);
             return result;
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             await this.progressService.fail(ctx, jobId, message);
+            this.sideEffectBuffer.deactivate();
             await this.assetImportService.cleanupImportSession(jobId);
             throw error;
         }
+    }
+
+    private shouldReindexSearch(result: ProductFeedImportResult): boolean {
+        return (
+            result.productsCreated +
+                result.productsUpdated +
+                result.variantsCreated +
+                result.variantsUpdated >
+            0
+        );
     }
 
     private reportProgress(
@@ -359,11 +391,5 @@ export class ProductFeedImportService implements OnModuleInit {
 
     private formatMapWarnings(warnings: FeedWarning[]): string[] {
         return warnings.map(w => w.message);
-    }
-
-    private async reindexSearch(ctx: RequestContext): Promise<void> {
-        this.logger.log('Rebuilding search index...');
-        const job = await this.searchService.reindex(ctx);
-        this.logger.log(`Search reindex job queued (id: ${job.id})`);
     }
 }

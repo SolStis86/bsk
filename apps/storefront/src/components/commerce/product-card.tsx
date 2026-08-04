@@ -13,18 +13,19 @@ import {
 
 interface ProductCardProps {
     product: FragmentOf<typeof ProductCardFragment>;
-    wishlistByVariantId?: Record<string, string>;
+    wishlistItemId?: string | null;
     isAuthenticated?: boolean;
+    onWishlistChange?: (variantId: string, itemId: string | null) => void;
 }
 
 export function ProductCard({
     product: productProp,
-    wishlistByVariantId = {},
+    wishlistItemId = null,
     isAuthenticated = false,
+    onWishlistChange,
 }: ProductCardProps) {
     const t = useTranslations('Product');
     const product = readFragment(ProductCardFragment, productProp);
-    const wishlistItemId = wishlistByVariantId[product.productVariantId] ?? null;
 
     return (
         <article className="group flex h-full flex-col overflow-hidden rounded-lg bg-card shadow-sm transition-shadow duration-300 hover:shadow-md">
@@ -90,6 +91,7 @@ export function ProductCard({
                         productSlug={product.slug}
                         wishlistItemId={wishlistItemId}
                         isAuthenticated={isAuthenticated}
+                        onWishlistChange={onWishlistChange}
                     />
                 </div>
             </div>

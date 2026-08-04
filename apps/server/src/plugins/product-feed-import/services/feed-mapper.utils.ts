@@ -62,6 +62,19 @@ export function filenameFromUrl(url: string): string {
     }
 }
 
+export function parseAllImageFilenames(row: RawFeedRow): string[] {
+    const entries = normalizeWhitespace(row.allImages)
+        .split('|')
+        .map(entry => entry.trim())
+        .filter(Boolean);
+
+    if (entries.length === 0) {
+        return [];
+    }
+
+    return dedupeFilenames(entries.map(filenameFromUrl).filter(Boolean));
+}
+
 export function parseImageUrls(row: RawFeedRow): string[] {
     const fromAllImages = normalizeWhitespace(row.allImages)
         .split('|')
@@ -77,9 +90,9 @@ export function parseImageUrls(row: RawFeedRow): string[] {
 }
 
 export function parseImageFilenames(row: RawFeedRow): string[] {
-    const fromUrls = parseImageUrls(row).map(filenameFromUrl).filter(Boolean);
-    if (fromUrls.length > 0) {
-        return dedupeFilenames(fromUrls);
+    const fromAllImages = parseAllImageFilenames(row);
+    if (fromAllImages.length > 0) {
+        return fromAllImages;
     }
 
     const imageName = normalizeWhitespace(row.imageName);

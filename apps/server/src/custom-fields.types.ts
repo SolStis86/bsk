@@ -21,6 +21,8 @@ declare module '@vendure/core/dist/entity/custom-entity-fields' {
         showInMainNav: boolean;
         navSortOrder: number;
         navHighlight: boolean;
+        showOnHomepage: boolean;
+        homepageSortOrder: number;
     }
 
     interface CustomGlobalSettingsFields {

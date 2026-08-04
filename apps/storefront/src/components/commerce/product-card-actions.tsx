@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import { Heart, Plus } from 'lucide-react';
+import { Heart, Loader2, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
@@ -9,12 +9,14 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { addToCart } from '@/app/[locale]/product/[slug]/actions';
 import { toggleWishlistVariant } from '@/app/[locale]/account/(protected)/wishlist/actions';
+import { emitWishlistCountChange } from '@/lib/wishlist-client';
 
 interface ProductCardWishlistButtonProps {
     variantId: string;
     productSlug: string;
     wishlistItemId: string | null;
     isAuthenticated: boolean;
+    onWishlistChange?: (variantId: string, itemId: string | null) => void;
     className?: string;
 }
 
@@ -23,6 +25,7 @@ export function ProductCardWishlistButton({
     productSlug,
     wishlistItemId: initialWishlistItemId,
     isAuthenticated,
+    onWishlistChange,
     className,
 }: ProductCardWishlistButtonProps) {
     const t = useTranslations('Wishlist');
@@ -31,8 +34,11 @@ export function ProductCardWishlistButton({
     const [isPending, startTransition] = useTransition();
 
     useEffect(() => {
+        if (isPending) {
+            return;
+        }
         setWishlistItemId(initialWishlistItemId);
-    }, [initialWishlistItemId, variantId]);
+    }, [initialWishlistItemId, variantId, isPending]);
 
     const isWishlisted = Boolean(wishlistItemId);
 
@@ -46,10 +52,15 @@ export function ProductCardWishlistButton({
         }
 
         startTransition(async () => {
-            const result = await toggleWishlistVariant(variantId, wishlistItemId);
+            const wasWishlisted = Boolean(wishlistItemId);
+            const result = await toggleWishlistVariant(variantId, wishlistItemId, {
+                revalidateCache: false,
+            });
             if (result.success) {
-                if (wishlistItemId) {
+                if (wasWishlisted) {
                     setWishlistItemId(null);
+                    onWishlistChange?.(variantId, null);
+                    emitWishlistCountChange(-1);
                     toast.success(t('removed'));
                     return;
                 }
@@ -59,6 +70,8 @@ export function ProductCardWishlistButton({
                         ? result.itemId
                         : null;
                 setWishlistItemId(addedItemId);
+                onWishlistChange?.(variantId, addedItemId);
+                emitWishlistCountChange(1);
                 toast.success(t('added'));
                 return;
             }
@@ -72,16 +85,27 @@ export function ProductCardWishlistButton({
             type="button"
             variant="ghost"
             size="icon-sm"
-            className={cn('size-8 shrink-0 text-brand-charcoal hover:text-brand-pink', className)}
+            className={cn(
+                'relative size-8 shrink-0 text-brand-charcoal hover:text-brand-pink',
+                className,
+            )}
             disabled={isPending}
             aria-label={isWishlisted ? t('remove') : t('add')}
             aria-pressed={isWishlisted}
+            aria-busy={isPending}
             onClick={handleClick}
         >
-            <Heart
-                className={cn('size-5 transition-colors', isWishlisted && 'fill-brand-pink text-brand-pink')}
-                strokeWidth={1.75}
-            />
+            {isPending ? (
+                <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+            ) : (
+                <Heart
+                    className={cn(
+                        'size-5 transition-colors',
+                        isWishlisted && 'fill-brand-pink text-brand-pink',
+                    )}
+                    strokeWidth={1.75}
+                />
+            )}
         </Button>
     );
 }
@@ -133,9 +157,14 @@ export function ProductCardAddToCartButton({
             )}
             disabled={!inStock || isPending}
             aria-label={t('addToCart')}
+            aria-busy={isPending}
             onClick={handleClick}
         >
-            <Plus className="size-5" strokeWidth={2} />
+            {isPending ? (
+                <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+            ) : (
+                <Plus className="size-5" strokeWidth={2} />
+            )}
         </Button>
     );
 }

@@ -151,6 +151,31 @@ export function getParentCollectionNavDefaults(slug: string): {
     };
 }
 
+/** Default homepage category grid settings for top-level parent collections (keyed by slug). */
+export const PARENT_COLLECTION_HOMEPAGE_DEFAULTS: Readonly<
+    Record<string, { showOnHomepage: boolean; homepageSortOrder: number }>
+> = {
+    'sexy-lingerie': { showOnHomepage: true, homepageSortOrder: 10 },
+    'toys-for-her': { showOnHomepage: true, homepageSortOrder: 20 },
+    'toys-for-him': { showOnHomepage: true, homepageSortOrder: 30 },
+    vibrators: { showOnHomepage: true, homepageSortOrder: 40 },
+    essentials: { showOnHomepage: true, homepageSortOrder: 50 },
+    couples: { showOnHomepage: true, homepageSortOrder: 60 },
+    'new-in': { showOnHomepage: true, homepageSortOrder: 70 },
+    'best-sellers': { showOnHomepage: true, homepageSortOrder: 80 },
+};
+
+export function getParentCollectionHomepageDefaults(slug: string): {
+    showOnHomepage: boolean;
+    homepageSortOrder: number;
+} {
+    const defaults = PARENT_COLLECTION_HOMEPAGE_DEFAULTS[slug];
+    return {
+        showOnHomepage: defaults?.showOnHomepage ?? false,
+        homepageSortOrder: defaults?.homepageSortOrder ?? 0,
+    };
+}
+
 /** Child slugs use a double-dash join; Vendure normalises consecutive dashes to one. */
 export function childCollectionSlug(catalogue: string, range: string): string {
     return normalizeString(`${collectionSlug(catalogue)}--${collectionSlug(range)}`, '-');

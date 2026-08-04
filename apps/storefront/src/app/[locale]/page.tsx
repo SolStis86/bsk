@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import {Suspense} from "react";
 import {getRouteLocale} from "@/i18n/server";
 import {HeroSection} from "@/components/layout/hero-section";
+import {HomepageCategories} from "@/components/commerce/homepage-categories";
 import {FeaturedProducts} from "@/components/commerce/featured-products";
 import {SITE_NAME, SITE_URL, buildCanonicalUrl} from "@/lib/metadata";
 import {BadgeCheck, Tag, Zap} from "lucide-react";
@@ -44,6 +45,9 @@ export default async function Home() {
     return (
         <div className="min-h-screen">
             <HeroSection/>
+            <Suspense>
+                <HomepageCategories/>
+            </Suspense>
             <Suspense>
                 <FeaturedProducts/>
             </Suspense>

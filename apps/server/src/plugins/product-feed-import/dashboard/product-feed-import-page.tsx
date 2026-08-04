@@ -63,6 +63,7 @@ const STAGE_LABELS: Record<string, string> = {
     DISABLING_MISSING: 'Disabling missing SKUs',
     ENQUEUING_ASSETS: 'Queueing asset imports',
     APPLYING_COLLECTIONS: 'Applying collections',
+    IMPORTING_ASSETS: 'Importing assets',
     REINDEXING_SEARCH: 'Reindexing search',
     COMPLETE: 'Complete',
     FAILED: 'Failed',
@@ -321,7 +322,12 @@ export function ProductFeedImportPage() {
                                 </div>
                             </div>
 
-                            <p className="text-muted-foreground text-sm">{displayProgress.message}</p>
+                            <p className="text-muted-foreground text-sm">
+                                {displayProgress.stage === 'IMPORTING_ASSETS' &&
+                                (displayProgress.assetsPending ?? 0) > 0
+                                    ? `Importing assets (${displayProgress.assetsPending} remaining)…`
+                                    : displayProgress.message}
+                            </p>
 
                             {progressQueryError ? (
                                 <p className="text-destructive text-sm">

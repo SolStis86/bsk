@@ -2,6 +2,7 @@
 
 import { FragmentOf, readFragment } from '@/graphql';
 import { loadMoreProducts } from '@/lib/actions/load-more-products';
+import { getWishlistVariantMapAction } from '@/app/[locale]/account/(protected)/wishlist/actions';
 import { ProductCardFragment } from '@/lib/vendure/fragments';
 import { PRODUCTS_PAGE_SIZE } from '@/lib/search-helpers';
 import { ProductCard } from '@/components/commerce/product-card';
@@ -14,7 +15,6 @@ interface InfiniteProductGridProps {
     initialItems: FragmentOf<typeof ProductCardFragment>[];
     totalItems: number;
     collectionSlug?: string;
-    wishlistByVariantId?: Record<string, string>;
     isAuthenticated?: boolean;
 }
 
@@ -43,7 +43,6 @@ export function InfiniteProductGrid({
     initialItems,
     totalItems,
     collectionSlug,
-    wishlistByVariantId = {},
     isAuthenticated = false,
 }: InfiniteProductGridProps) {
     const t = useTranslations('Product');
@@ -54,10 +53,47 @@ export function InfiniteProductGrid({
     const [page, setPage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [hasMore, setHasMore] = useState(initialItems.length < totalItems);
+    const [wishlistByVariantId, setWishlistByVariantId] = useState<Record<string, string>>({});
     const sentinelRef = useRef<HTMLDivElement>(null);
     const loadingRef = useRef(false);
+    const prevFilterKeyRef = useRef(filterKey);
 
     useEffect(() => {
+        if (!isAuthenticated) {
+            setWishlistByVariantId({});
+            return;
+        }
+
+        let cancelled = false;
+        void getWishlistVariantMapAction().then((map) => {
+            if (!cancelled) {
+                setWishlistByVariantId(map);
+            }
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [isAuthenticated, filterKey]);
+
+    const handleWishlistChange = useCallback((variantId: string, itemId: string | null) => {
+        setWishlistByVariantId((current) => {
+            const next = { ...current };
+            if (itemId) {
+                next[variantId] = itemId;
+            } else {
+                delete next[variantId];
+            }
+            return next;
+        });
+    }, []);
+
+    useEffect(() => {
+        if (prevFilterKeyRef.current === filterKey) {
+            return;
+        }
+
+        prevFilterKeyRef.current = filterKey;
         setItems(initialItems);
         setPage(1);
         setHasMore(initialItems.length < totalItems);
@@ -144,8 +180,13 @@ export function InfiniteProductGrid({
                     <ProductCard
                         key={getProductId(product)}
                         product={product}
-                        wishlistByVariantId={wishlistByVariantId}
+                        wishlistItemId={
+                            wishlistByVariantId[
+                                readFragment(ProductCardFragment, product).productVariantId
+                            ] ?? null
+                        }
                         isAuthenticated={isAuthenticated}
+                        onWishlistChange={handleWishlistChange}
                     />
                 ))}
             </div>
