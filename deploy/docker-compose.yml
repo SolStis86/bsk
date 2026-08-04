@@ -67,6 +67,9 @@ services:
       STOREFRONT_URL: https://${ENV_LABEL}${ROOT_DOMAIN}
     volumes:
       - vendure_assets:/var/lib/vendure/assets
+    # Worker process has no HTTP server; disable the /health check baked into the server image.
+    healthcheck:
+      disable: true
 
   storefront:
     image: ${GHCR_IMAGE_STOREFRONT}:${IMAGE_TAG}
