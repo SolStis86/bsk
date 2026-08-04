@@ -1,2 +1,12 @@
 include:
   - path: ../docker-compose.yml
+
+# env_file paths are relative to this directory (deploy/development/).
+# Place .env here: deploy/development/.env
+services:
+  vendure-server:
+    env_file: .env
+  vendure-worker:
+    env_file: .env
+  storefront:
+    env_file: .env

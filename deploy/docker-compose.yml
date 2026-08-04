@@ -37,8 +37,6 @@ services:
     image: ${GHCR_IMAGE_VENDURE}:${IMAGE_TAG}
     restart: unless-stopped
     command: ['node', './dist/index.js']
-    env_file:
-      - ${ENV_FILE:-.env}
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     environment:
@@ -57,8 +55,6 @@ services:
     image: ${GHCR_IMAGE_VENDURE}:${IMAGE_TAG}
     restart: unless-stopped
     command: ['node', './dist/index-worker.js']
-    env_file:
-      - ${ENV_FILE:-.env}
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     environment:
@@ -73,8 +69,6 @@ services:
   storefront:
     image: ${GHCR_IMAGE_STOREFRONT}:${IMAGE_TAG}
     restart: unless-stopped
-    env_file:
-      - ${ENV_FILE:-.env}
     environment:
       PORT: ${STOREFRONT_PORT}
       HOSTNAME: 0.0.0.0
