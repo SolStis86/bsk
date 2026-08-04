@@ -1,16 +1,21 @@
 # Shared compose file for both dev and production Plesk stacks.
 #
+# Database options (set in each stack's .env):
+#   external (default) — use Postgres already running on the Plesk host
+#     DB_HOST=host.docker.internal
+#   container — bundled Postgres service
+#     COMPOSE_PROFILES=container-db
+#     DB_HOST=postgres
+#
 # Run two separate stacks on the same server:
 #   deploy/production/.env  →  Plesk stack "bsk-production"
 #   deploy/development/.env →  Plesk stack "bsk-development"
-#
-# Each stack needs its own .env (ports, secrets, IMAGE_TAG, ROOT_DOMAIN).
-# Public URLs are derived from ROOT_DOMAIN + ENV_LABEL in this file.
 
 name: bsk-${STACK_ENV}
 
 services:
   postgres:
+    profiles: [container-db]
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -34,10 +39,12 @@ services:
     command: ['node', './dist/index.js']
     env_file:
       - ${ENV_FILE:-.env}
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     environment:
       APP_ENV: ${APP_ENV}
-      DB_HOST: postgres
-      DB_PORT: '5432'
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
       PORT: ${VENDURE_PORT}
       VENDURE_PUBLIC_URL: https://api.${ENV_LABEL}${ROOT_DOMAIN}
       STOREFRONT_URL: https://www.${ENV_LABEL}${ROOT_DOMAIN}
@@ -45,9 +52,6 @@ services:
       - '${VENDURE_HOST_PORT}:${VENDURE_PORT}'
     volumes:
       - vendure_assets:/app/apps/server/static/assets
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   vendure-worker:
     image: ${GHCR_IMAGE_VENDURE}:${IMAGE_TAG}
@@ -55,17 +59,16 @@ services:
     command: ['node', './dist/index-worker.js']
     env_file:
       - ${ENV_FILE:-.env}
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     environment:
       APP_ENV: ${APP_ENV}
-      DB_HOST: postgres
-      DB_PORT: '5432'
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
       VENDURE_PUBLIC_URL: https://api.${ENV_LABEL}${ROOT_DOMAIN}
       STOREFRONT_URL: https://www.${ENV_LABEL}${ROOT_DOMAIN}
     volumes:
       - vendure_assets:/app/apps/server/static/assets
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   storefront:
     image: ${GHCR_IMAGE_STOREFRONT}:${IMAGE_TAG}
