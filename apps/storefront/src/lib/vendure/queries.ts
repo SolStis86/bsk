@@ -8,10 +8,16 @@ export const GetTopCollectionsQuery = graphql(`
                 id
                 name
                 slug
+                featuredAsset {
+                    id
+                    preview
+                }
                 customFields {
                     showInMainNav
                     navSortOrder
                     navHighlight
+                    showOnHomepage
+                    homepageSortOrder
                 }
             }
         }

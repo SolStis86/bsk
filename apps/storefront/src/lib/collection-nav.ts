@@ -9,6 +9,12 @@ export interface CollectionNavLink {
     highlight: boolean;
 }
 
+export interface HomepageCategory {
+    slug: string;
+    name: string;
+    imagePreview: string | null;
+}
+
 export function sortCollectionsByName(collections: TopCollection[]): TopCollection[] {
     return [...collections].sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -28,6 +34,24 @@ export function toMainNavLinks(collections: TopCollection[]): CollectionNavLink[
             slug: collection.slug,
             name: collection.name,
             highlight: collection.customFields?.navHighlight === true,
+        }));
+}
+
+export function toHomepageCategories(collections: TopCollection[]): HomepageCategory[] {
+    return collections
+        .filter((collection) => collection.customFields?.showOnHomepage === true)
+        .sort((a, b) => {
+            const orderA = a.customFields?.homepageSortOrder ?? 0;
+            const orderB = b.customFields?.homepageSortOrder ?? 0;
+            if (orderA !== orderB) {
+                return orderA - orderB;
+            }
+            return a.name.localeCompare(b.name);
+        })
+        .map((collection) => ({
+            slug: collection.slug,
+            name: collection.name,
+            imagePreview: collection.featuredAsset?.preview ?? null,
         }));
 }
 
