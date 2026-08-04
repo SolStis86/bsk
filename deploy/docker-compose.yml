@@ -47,7 +47,7 @@ services:
       DB_PORT: ${DB_PORT}
       PORT: ${VENDURE_PORT}
       VENDURE_PUBLIC_URL: https://api.${ENV_LABEL}${ROOT_DOMAIN}
-      STOREFRONT_URL: https://www.${ENV_LABEL}${ROOT_DOMAIN}
+      STOREFRONT_URL: https://${ENV_LABEL}${ROOT_DOMAIN}
     ports:
       - '${VENDURE_HOST_PORT}:${VENDURE_PORT}'
     volumes:
@@ -66,7 +66,7 @@ services:
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       VENDURE_PUBLIC_URL: https://api.${ENV_LABEL}${ROOT_DOMAIN}
-      STOREFRONT_URL: https://www.${ENV_LABEL}${ROOT_DOMAIN}
+      STOREFRONT_URL: https://${ENV_LABEL}${ROOT_DOMAIN}
     volumes:
       - vendure_assets:/app/apps/server/static/assets
 
@@ -79,7 +79,7 @@ services:
       PORT: ${STOREFRONT_PORT}
       HOSTNAME: 0.0.0.0
       VENDURE_SHOP_API_URL: http://vendure-server:${VENDURE_PORT}/shop-api
-      NEXT_PUBLIC_SITE_URL: https://www.${ENV_LABEL}${ROOT_DOMAIN}
+      NEXT_PUBLIC_SITE_URL: https://${ENV_LABEL}${ROOT_DOMAIN}
     ports:
       - '${STOREFRONT_HOST_PORT}:${STOREFRONT_PORT}'
     depends_on:

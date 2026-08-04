@@ -9,7 +9,7 @@ on:
       - 'v*.*.*'
   workflow_dispatch:
     inputs:
-      environment:
+      channel:
         description: 'Image channel to publish (overrides branch default)'
         required: false
         type: choice
@@ -27,13 +27,13 @@ jobs:
     outputs:
       channel: ${{ steps.channel.outputs.channel }}
       push: ${{ steps.channel.outputs.push }}
-      env_label: ${{ steps.channel.outputs.env_label }}
+      github_environment: ${{ steps.channel.outputs.github_environment }}
     steps:
       - name: Resolve image channel
         id: channel
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.environment }}" != "auto" ]; then
-            CHANNEL="${{ inputs.environment }}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.channel }}" != "auto" ]; then
+            CHANNEL="${{ inputs.channel }}"
           else
             case "${{ github.ref }}" in
               refs/heads/main|refs/tags/v*) CHANNEL="prod" ;;
@@ -45,14 +45,14 @@ jobs:
           if [ "$CHANNEL" = "none" ]; then
             echo "channel=none" >> "$GITHUB_OUTPUT"
             echo "push=false" >> "$GITHUB_OUTPUT"
-            echo "env_label=" >> "$GITHUB_OUTPUT"
+            echo "github_environment=" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           if [ "$CHANNEL" = "prod" ]; then
-            echo "env_label=" >> "$GITHUB_OUTPUT"
+            echo "github_environment=production" >> "$GITHUB_OUTPUT"
           else
-            echo "env_label=dev." >> "$GITHUB_OUTPUT"
+            echo "github_environment=development" >> "$GITHUB_OUTPUT"
           fi
 
           echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
@@ -62,6 +62,7 @@ jobs:
     needs: resolve-channel
     if: needs.resolve-channel.outputs.push == 'true'
     runs-on: ubuntu-latest
+    environment: ${{ needs.resolve-channel.outputs.github_environment }}
     permissions:
       contents: read
       packages: write
@@ -84,25 +85,17 @@ jobs:
       - name: Resolve deployment URLs
         id: deploy
         env:
-          PROD_ROOT_DOMAIN: ${{ vars.PROD_ROOT_DOMAIN }}
-          DEV_ROOT_DOMAIN: ${{ vars.DEV_ROOT_DOMAIN }}
+          ROOT_DOMAIN: ${{ vars.ROOT_DOMAIN }}
+          ENV_LABEL: ${{ vars.ENV_LABEL }}
         run: |
-          CHANNEL="${{ needs.resolve-channel.outputs.channel }}"
-          ENV_LABEL="${{ needs.resolve-channel.outputs.env_label }}"
-          ROOT="$PROD_ROOT_DOMAIN"
-
-          if [ "$CHANNEL" = "dev" ] && [ -n "$DEV_ROOT_DOMAIN" ]; then
-            ROOT="$DEV_ROOT_DOMAIN"
-            ENV_LABEL=""
-          fi
-
-          if [ -z "$ROOT" ]; then
-            echo "Configure the PROD_ROOT_DOMAIN repository variable (Settings → Secrets and variables → Actions → Variables)." >&2
+          if [ -z "$ROOT_DOMAIN" ]; then
+            echo "Set ROOT_DOMAIN on the ${{ needs.resolve-channel.outputs.github_environment }} GitHub environment." >&2
+            echo "Settings → Environments → ${{ needs.resolve-channel.outputs.github_environment }} → Environment variables" >&2
             exit 1
           fi
 
-          echo "storefront_url=https://www.${ENV_LABEL}${ROOT}" >> "$GITHUB_OUTPUT"
-          echo "asset_host=api.${ENV_LABEL}${ROOT}" >> "$GITHUB_OUTPUT"
+          echo "storefront_url=https://${ENV_LABEL}${ROOT_DOMAIN}" >> "$GITHUB_OUTPUT"
+          echo "asset_host=api.${ENV_LABEL}${ROOT_DOMAIN}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
