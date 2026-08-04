@@ -1,6 +1,7 @@
 import { readdirSync } from 'fs';
 import path from 'path';
 import { preBootstrapConfig } from '@vendure/core';
+import { resetConfig } from '@vendure/core/dist/config/config-helpers';
 import { createConnection } from 'typeorm';
 import { camelCase } from 'typeorm/util/StringUtils';
 import type { VendureConfig } from '@vendure/core';
@@ -46,6 +47,7 @@ export async function productTableExists(config: VendureConfig): Promise<boolean
         return Boolean(result[0]?.exists);
     } finally {
         await connection.close();
+        resetConfig();
     }
 }
 
@@ -101,5 +103,6 @@ export async function synchronizeSchemaAndStampMigrations(config: VendureConfig)
         console.log('Database schema synchronized successfully.');
     } finally {
         await connection.close();
+        resetConfig();
     }
 }
