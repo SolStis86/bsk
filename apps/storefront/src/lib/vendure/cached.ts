@@ -1,10 +1,13 @@
 import {cacheLife, cacheTag} from 'next/cache';
 import {query} from './api';
+import {isVendureBuildFetchSkipped, BUILD_PLACEHOLDER_SLUG} from './build-skip';
 import {GetActiveChannelQuery, GetAllCollectionSlugsQuery, GetAvailableCountriesQuery, GetTopCollectionsQuery} from './queries';
 import {
     sortCollectionsByName,
+    toHomepageCategories,
     toMainNavLinks,
     type CollectionNavLink,
+    type HomepageCategory,
     type TopCollection,
 } from '@/lib/collection-nav';
 
@@ -16,6 +19,10 @@ import {
 export async function getActiveChannelCached() {
     'use cache';
     cacheLife('hours');
+
+    if (isVendureBuildFetchSkipped()) {
+        return {availableCurrencyCodes: ['GBP'], defaultCurrencyCode: 'GBP'};
+    }
 
     const result = await query(GetActiveChannelQuery);
     return result.data.activeChannel;
@@ -31,6 +38,10 @@ export async function getAvailableCountriesCached(locale: string) {
     cacheLife('max');
     cacheTag(`countries-${locale}`);
 
+    if (isVendureBuildFetchSkipped()) {
+        return [];
+    }
+
     const result = await query(GetAvailableCountriesQuery, undefined, {languageCode: locale});
     return result.data.availableCountries || [];
 }
@@ -44,6 +55,10 @@ export async function getTopCollections(locale: string): Promise<TopCollection[]
     'use cache';
     cacheLife('days');
     cacheTag(`collections-${locale}`);
+
+    if (isVendureBuildFetchSkipped()) {
+        return [];
+    }
 
     const result = await query(GetTopCollectionsQuery, undefined, {languageCode: locale});
     return result.data.collections.items;
@@ -72,6 +87,19 @@ export async function getMainNavCollections(locale: string): Promise<CollectionN
 }
 
 /**
+ * Curated homepage category grid from admin custom fields and collection assets.
+ */
+export async function getHomepageCategories(locale: string): Promise<HomepageCategory[]> {
+    'use cache';
+    cacheLife('days');
+    cacheTag(`collections-${locale}`);
+    cacheTag('homepage-categories');
+
+    const collections = await getTopCollections(locale);
+    return toHomepageCategories(collections);
+}
+
+/**
  * All collection slugs for static page generation (parent + child).
  * Falls back to top-level slugs when the shop API is unavailable (e.g. dev startup race).
  */
@@ -79,6 +107,10 @@ export async function getAllCollectionSlugs(locale: string): Promise<string[]> {
     'use cache';
     cacheLife('days');
     cacheTag(`collections-${locale}`);
+
+    if (isVendureBuildFetchSkipped()) {
+        return [BUILD_PLACEHOLDER_SLUG];
+    }
 
     try {
         const take = 100;
@@ -104,7 +136,7 @@ export async function getAllCollectionSlugs(locale: string): Promise<string[]> {
             const topLevel = await getTopCollections(locale);
             return topLevel.map(collection => collection.slug);
         } catch {
-            return [];
+            return [BUILD_PLACEHOLDER_SLUG];
         }
     }
 }

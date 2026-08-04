@@ -3,6 +3,7 @@ import {getRouteLocale} from '@/i18n/server';
 import {cacheLife, cacheTag} from 'next/cache';
 import {getActiveCurrencyCode} from '@/lib/currency-server';
 import {query} from '@/lib/vendure/api';
+import {isVendureBuildFetchSkipped} from '@/lib/vendure/build-skip';
 import {GetCollectionProductsQuery} from '@/lib/vendure/queries';
 import {BEST_SELLERS_COLLECTION_SLUG} from '@/lib/collection-slugs';
 import { Link } from '@/i18n/navigation';
@@ -12,6 +13,10 @@ import {getTranslations} from 'next-intl/server';
 async function getFeaturedCollectionProducts(currencyCode: string) {
     'use cache';
     cacheLife('days');
+
+    if (isVendureBuildFetchSkipped()) {
+        return [];
+    }
 
     const locale = await getRouteLocale();
     cacheTag(`featured-${locale}-${currencyCode}`);

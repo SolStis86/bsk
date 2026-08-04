@@ -1,6 +1,7 @@
 import type {TadaDocumentNode} from 'gql.tada';
 import {print} from 'graphql';
 import {getAuthToken} from '@/lib/auth';
+import {isVendureBuildFetchSkipped} from '@/lib/vendure/build-skip';
 
 const VENDURE_API_URL = process.env.VENDURE_SHOP_API_URL || process.env.NEXT_PUBLIC_VENDURE_SHOP_API_URL;
 const VENDURE_CHANNEL_TOKEN = process.env.VENDURE_CHANNEL_TOKEN || process.env.NEXT_PUBLIC_VENDURE_CHANNEL_TOKEN || '__default_channel__';
@@ -43,6 +44,10 @@ export async function query<TResult, TVariables>(
         ? [variables?: TVariables, options?: VendureRequestOptions]
         : [variables: TVariables, options?: VendureRequestOptions]
 ): Promise<{ data: TResult; token?: string }> {
+    if (isVendureBuildFetchSkipped()) {
+        return {data: {} as TResult};
+    }
+
     const {
         token,
         useAuthToken,

@@ -29,6 +29,7 @@ import {getActiveCurrencyCode} from '@/lib/currency-server';
 import {getRouteLocale} from '@/i18n/server';
 import {getTranslations} from 'next-intl/server';
 import {getTopCollections, getAllCollectionSlugs} from '@/lib/vendure/cached';
+import {BUILD_PLACEHOLDER_SLUG, isVendureBuildFetchSkipped} from '@/lib/vendure/build-skip';
 import {getCollectionBreadcrumbParent} from '@/lib/collection-slugs';
 import {Badge} from '@/components/ui/badge';
 
@@ -63,7 +64,14 @@ async function getCollectionMetadata(slug: string) {
 }
 
 export async function generateStaticParams() {
+    if (isVendureBuildFetchSkipped()) {
+        return [{slug: BUILD_PLACEHOLDER_SLUG}];
+    }
+
     const slugs = await getAllCollectionSlugs(routing.defaultLocale);
+    if (slugs.length === 0) {
+        return [{slug: BUILD_PLACEHOLDER_SLUG}];
+    }
     return slugs.map(slug => ({slug}));
 }
 

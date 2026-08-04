@@ -10,9 +10,12 @@
 # │ ENV_LABEL       │ (empty)                          │ dev.                        │
 # └─────────────────┴──────────────────────────────────┴─────────────────────────────┘
 #
-# Resulting build-time URLs:
-#   production  → https://buysomeknickers.com, https://api.buysomeknickers.com/shop-api
-#   development → https://dev.buysomeknickers.com, https://api.dev.buysomeknickers.com/shop-api
+# Resulting build-time URLs (baked into the storefront image):
+#   production  → https://buysomeknickers.com, api.buysomeknickers.com (assets)
+#   development → https://dev.buysomeknickers.com, api.dev.buysomeknickers.com (assets)
+#
+# VENDURE_SHOP_API_URL is NOT set in GitHub — the Docker build skips live API calls.
+# Runtime API URL is set in Plesk compose (.env / environment block).
 #
 # Optional environment settings:
 #   - Deployment branches: production ← main, development ← develop
