@@ -85,7 +85,7 @@ export function CategoryAvailabilityPage() {
             await refetch();
             setSelectedTags(updateResult.enabledTags);
             toast.success(
-                `Categories updated — ${updateResult.productsEnabled} products enabled, ${updateResult.productsDisabled} disabled. Search reindex queued.`,
+                `Categories updated — ${updateResult.productsEnabled} products enabled, ${updateResult.productsDisabled} disabled. Search reindex and storefront cache refresh queued.`,
             );
         },
         onError: () => {

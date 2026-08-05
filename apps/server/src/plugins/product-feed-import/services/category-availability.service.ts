@@ -17,6 +17,7 @@ import {
     mergeCategoryTagsIntoHierarchy,
 } from '../constants/category-hierarchy.constants';
 import { FACET_CATEGORY } from '../constants/taxonomy.constants';
+import { StorefrontRevalidationService } from './storefront-revalidation.service';
 
 export interface CategoryAvailabilityTag {
     tag: string;
@@ -49,6 +50,7 @@ export class CategoryAvailabilityService {
         private productService: ProductService,
         private productVariantService: ProductVariantService,
         private searchService: SearchService,
+        private storefrontRevalidationService: StorefrontRevalidationService,
     ) {}
 
     async getAvailability(ctx: RequestContext): Promise<CategoryAvailabilityCollection[]> {
@@ -128,6 +130,8 @@ export class CategoryAvailabilityService {
 
         const job = await this.searchService.reindex(ctx);
         this.logger.log(`Search reindex job queued after category availability update (id: ${job.id})`);
+
+        await this.storefrontRevalidationService.revalidateCatalogCaches();
 
         return {
             enabledTags: normalizedTags,

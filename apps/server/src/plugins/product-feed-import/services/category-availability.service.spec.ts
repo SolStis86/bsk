@@ -13,6 +13,7 @@ describe('CategoryAvailabilityService', () => {
         {} as never,
         {} as never,
         {} as never,
+        { revalidateCatalogCaches: vi.fn().mockResolvedValue(undefined) } as never,
     );
 
     it('enables products only when all category tags are enabled', () => {
