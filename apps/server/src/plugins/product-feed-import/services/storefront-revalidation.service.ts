@@ -3,13 +3,20 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PRODUCT_FEED_IMPORT_PLUGIN_OPTIONS, loggerCtx } from '../constants';
 import { PluginInitOptions } from '../types';
 
-const REVALIDATION_TAGS = [
+const CATALOG_REVALIDATION_TAGS = [
     'collections',
     'navbar-collections',
     'mobile-nav',
     'homepage-categories',
     'featured',
     'products',
+] as const;
+
+const NAVIGATION_REVALIDATION_TAGS = [
+    'collections',
+    'navbar-collections',
+    'mobile-nav',
+    'homepage-categories',
 ] as const;
 
 @Injectable()
@@ -19,6 +26,14 @@ export class StorefrontRevalidationService {
     constructor(@Inject(PRODUCT_FEED_IMPORT_PLUGIN_OPTIONS) private options: PluginInitOptions) {}
 
     async revalidateCatalogCaches(): Promise<void> {
+        await this.revalidateTags([...CATALOG_REVALIDATION_TAGS]);
+    }
+
+    async revalidateNavigationCaches(): Promise<void> {
+        await this.revalidateTags([...NAVIGATION_REVALIDATION_TAGS]);
+    }
+
+    private async revalidateTags(tags: string[]): Promise<void> {
         const { storefrontUrl, revalidationSecret } = this.options;
 
         if (!storefrontUrl) {
@@ -40,7 +55,7 @@ export class StorefrontRevalidationService {
                     Authorization: `Bearer ${revalidationSecret}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ tags: [...REVALIDATION_TAGS] }),
+                body: JSON.stringify({ tags }),
             });
 
             if (!response.ok) {

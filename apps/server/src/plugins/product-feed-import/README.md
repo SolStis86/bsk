@@ -51,7 +51,7 @@ Re-import is safe — upserts by `sourceProductCode` / variant SKU. Product imag
 
 **Docker deployment:** when `vendure-server` and `vendure-worker` run in separate containers, mount the same volume at `/var/lib/vendure/import-sessions` on both and set `PRODUCT_FEED_IMPORT_SESSION_DIR=/var/lib/vendure/import-sessions` (see `deploy/docker-compose.yml`). The server image entrypoint creates that path and fixes volume ownership on startup. Without the shared volume, the server downloads the zip but asset jobs on the worker fail with `ENOENT` on the zip path.
 
-During catalog sync, per-product `apply-collection-filters` and `update-search-index` jobs are suppressed. After sync, a single collection-filter job runs for all collections. Search reindex is queued once after asset imports finish (or immediately when no assets are deferred). After a successful import, the plugin POSTs to the storefront `/api/revalidate` endpoint to refresh cached catalog pages.
+During catalog sync, per-product `apply-collection-filters` and `update-search-index` jobs are suppressed. After sync, a single collection-filter job runs for all collections. Search reindex is queued once after asset imports finish (or immediately when no assets are deferred). After a successful import, the plugin POSTs to the storefront `/api/revalidate` endpoint to refresh cached catalog pages. Collection create/update/delete in Admin also triggers navigation/homepage cache revalidation (requires matching `REVALIDATION_SECRET` on server and storefront).
 
 When `imageZipUrl` is not configured (local dev), the strategy falls back to Vendure's `DefaultAssetImportStrategy` for local `importAssetsDir` paths.
 

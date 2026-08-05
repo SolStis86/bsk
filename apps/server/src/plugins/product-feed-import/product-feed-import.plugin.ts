@@ -13,6 +13,7 @@ import { ProductFeedAssetImportProgressSyncService } from './services/product-fe
 import { ProductFeedAssetImportService } from './services/product-feed-asset-import.service';
 import { ProductFeedImportAssetSessionService } from './services/product-feed-import-asset-session.service';
 import { ProductFeedImportEventHandler } from './services/product-feed-import-event-handler.service';
+import { CollectionStorefrontRevalidationHandler } from './services/collection-storefront-revalidation.handler';
 import { ProductFeedImportFinalizationService } from './services/product-feed-import-finalization.service';
 import { ProductFeedImportProgressService } from './services/product-feed-import-progress.service';
 import { ProductFeedImportService } from './services/product-feed-import.service';
@@ -50,6 +51,7 @@ const productFeedZipAssetImportStrategy = new ProductFeedZipAssetImportStrategy(
         ProductFeedImportService,
         StorefrontRevalidationService,
         ProductFeedImportEventHandler,
+        CollectionStorefrontRevalidationHandler,
     ],
     adminApiExtensions: {
         schema: adminApiExtensions,
